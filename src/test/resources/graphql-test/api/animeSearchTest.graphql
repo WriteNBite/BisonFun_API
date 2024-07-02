@@ -1,0 +1,27 @@
+query animeSearchTest{
+    search(query: "Test", category: ANIME){
+        pageInfo {
+            currentPage
+            total
+            perPage
+            hasNextPage
+            lastPage
+        }
+        nodes {
+            id
+            title {
+                english
+            }
+            poster
+            category
+            format
+            year
+            externalIds {
+                aniListId
+                tmdbId
+                malId
+                imdbId
+            }
+        }
+    }
+}

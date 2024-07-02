@@ -1,0 +1,58 @@
+type UserVideoContentListElement{
+    user: User
+    videoContent: BasicInfo
+    episodes: Int
+    score: Int
+    status: UserVideoContentListStatus
+}
+
+type UserVideoContentListConnection{
+    nodes: [UserVideoContentListElement]
+    pageInfo: PageInfo!
+}
+
+type DeleteUserVideoContentListElementPayload {
+    success: Boolean
+}
+
+input DeleteUserVideoContentListElementInput {
+    userId: Int!
+    videoContentId: Int!
+}
+
+type UpdateUserVideoContentListElementPayload {
+    userVideoContentListElement: UserVideoContentListElement
+}
+
+input UpdateUserVideoContentListElementInput {
+    userId: Int!
+    videoContentId: Int!
+    episodes: Int
+    score: Int
+    status: UserVideoContentListStatus
+}
+
+enum UserVideoContentListStatus {
+    WATCHING
+    PLANNING
+    COMPLETED
+    DROPPED
+    PAUSED
+}
+
+input WhatToWatchInput{
+    animeListStatus: [UserVideoContentListStatus]
+    animeContentFormat: [VideoContentFormat]
+    mainstreamListStatus: [UserVideoContentListStatus]
+    mainstreamContentFormat: [VideoContentFormat]
+}
+
+input UserVideoContentListFilterInput{
+    episode: Int
+    score: Int
+    statuses: [UserVideoContentListStatus]
+    categories: [VideoContentCategory]
+    formats: [VideoContentFormat]
+    yearFrom: Int
+    yearTo: Int
+}

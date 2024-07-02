@@ -1,0 +1,5 @@
+type Mutation{
+    "Update Element from User Video Content List"
+    updateUserVideoContentListElement(input: UpdateUserVideoContentListElementInput): UpdateUserVideoContentListElementPayload
+    deleteUserVideoContentListElement(input: DeleteUserVideoContentListElementInput): DeleteUserVideoContentListElementPayload
+}

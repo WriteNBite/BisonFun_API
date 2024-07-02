@@ -1,0 +1,246 @@
+{
+  "id": 136804,
+  "idMal": 49458,
+  "title": {
+    "romaji": "Kono Subarashii Sekai ni Shukufuku wo! 3",
+    "english": "KONOSUBA -God's Blessing on This Wonderful World! 3",
+    "native": "この素晴らしい世界に祝福を! 3",
+    "userPreferred": "Kono Subarashii Sekai ni Shukufuku wo! 3"
+  },
+  "format": "TV",
+  "status": "RELEASING",
+  "description": "The third season of <i>Kono Subarashii Sekai ni Shukufuku wo! </i><br><br>\nThe dysfunctional party is back, but they may be short a member soon ’cause Kazuma is over it. Disillusioned with adventure, he wants to become a monk, but Aqua, Megumin, and Darkness call bull. However, the career dispute gets put on hold when a princess requests to hear all about their tales. Will the taste of fame at the royal castle keep them together or will this mark their farewell tour?<br><br>\n\n(Source: Crunchyroll)",
+  "startDate": {
+    "year": 2024,
+    "month": 4,
+    "day": 10
+  },
+  "endDate": {
+    "year": null,
+    "month": null,
+    "day": null
+  },
+  "seasonYear": 2024,
+  "episodes": 11,
+  "duration": 24,
+  "countryOfOrigin": "JP",
+  "isLicensed": true,
+  "updatedAt": 1712844623,
+  "coverImage": {
+    "medium": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/small/bx136804-7FVftG67FPBc.jpg",
+    "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx136804-7FVftG67FPBc.jpg"
+  },
+  "bannerImage": "https://s4.anilist.co/file/anilistcdn/media/anime/banner/136804-vrv1d1NgrfPo.jpg",
+  "genres": [
+    "Action",
+    "Adventure",
+    "Comedy",
+    "Fantasy"
+  ],
+  "synonyms": [
+    "Konosuba 3",
+    "ขอให้โชคดีมีชัยในโลกแฟนตาซี! ภาค 3"
+  ],
+  "averageScore": 81,
+  "meanScore": 82,
+  "popularity": 78515,
+  "isLocked": false,
+  "trending": 186,
+  "favourites": 1148,
+  "tags": [
+    {
+      "name": "Satire",
+      "description": "Prominently features the use of comedy or ridicule to expose and criticise social phenomena.",
+      "category": "Theme-Comedy",
+      "rank": 96,
+      "isGeneralSpoiler": false,
+      "isMediaSpoiler": false
+    },
+    {
+      "name": "Isekai",
+      "description": "Features characters being transported into an alternate world setting and having to adapt to their new surroundings.",
+      "category": "Theme-Fantasy",
+      "rank": 95,
+      "isGeneralSpoiler": false,
+      "isMediaSpoiler": false
+    },
+    {
+      "name": "Parody",
+      "description": "Features deliberate exaggeration of popular tropes or a particular genre to comedic effect.",
+      "category": "Theme-Comedy",
+      "rank": 95,
+      "isGeneralSpoiler": false,
+      "isMediaSpoiler": false
+    },
+    {
+      "name": "Magic",
+      "description": "Prominently features magical elements or the use of magic.",
+      "category": "Theme-Fantasy",
+      "rank": 84,
+      "isGeneralSpoiler": false,
+      "isMediaSpoiler": false
+    },
+    {
+      "name": "Male Protagonist",
+      "description": "Main character is male.",
+      "category": "Cast-Main Cast",
+      "rank": 81,
+      "isGeneralSpoiler": false,
+      "isMediaSpoiler": false
+    },
+    {
+      "name": "Alternate Universe",
+      "description": "Features multiple alternate universes in the same series.",
+      "category": "Setting-Universe",
+      "rank": 80,
+      "isGeneralSpoiler": true,
+      "isMediaSpoiler": false
+    },
+    {
+      "name": "Gods",
+      "description": "Prominently features a character of divine or religious nature.",
+      "category": "Cast-Traits",
+      "rank": 78,
+      "isGeneralSpoiler": false,
+      "isMediaSpoiler": false
+    },
+    {
+      "name": "Primarily Female Cast",
+      "description": "Main cast is mostly composed of female characters.",
+      "category": "Cast-Main Cast",
+      "rank": 73,
+      "isGeneralSpoiler": false,
+      "isMediaSpoiler": false
+    },
+    {
+      "name": "Chuunibyou",
+      "description": "Prominently features a character with \"Middle School 2nd Year Syndrome\", who either acts like a know-it-all adult or falsely believes they have special powers.",
+      "category": "Cast-Traits",
+      "rank": 71,
+      "isGeneralSpoiler": false,
+      "isMediaSpoiler": false
+    },
+    {
+      "name": "Afterlife",
+      "description": "Partly or completely set in the afterlife.",
+      "category": "Setting-Universe",
+      "rank": 61,
+      "isGeneralSpoiler": true,
+      "isMediaSpoiler": false
+    },
+    {
+      "name": "Demons",
+      "description": "Prominently features malevolent otherworldly creatures.",
+      "category": "Cast-Traits",
+      "rank": 57,
+      "isGeneralSpoiler": false,
+      "isMediaSpoiler": false
+    },
+    {
+      "name": "Artificial Intelligence",
+      "description": "Intelligent non-organic machines that work and react similarly to humans.",
+      "category": "Cast-Traits",
+      "rank": 54,
+      "isGeneralSpoiler": false,
+      "isMediaSpoiler": true
+    }
+  ],
+  "studios": {
+    "nodes": [
+      {
+        "name": "Drive"
+      },
+      {
+        "name": "KADOKAWA"
+      },
+      {
+        "name": "Sammy"
+      },
+      {
+        "name": "Nippon Columbia"
+      },
+      {
+        "name": "81 Produce"
+      }
+    ],
+    "pageInfo": {
+      "perPage": null,
+      "currentPage": null,
+      "lastPage": null,
+      "hasNextPage": false
+    }
+  },
+  "externalLinks": [
+    {
+      "id": 35869,
+      "url": "http://konosuba.com/3rd/",
+      "type": "INFO",
+      "notes": null,
+      "icon": null,
+      "color": null
+    },
+    {
+      "id": 35870,
+      "url": "https://twitter.com/konosubaanime",
+      "type": "SOCIAL",
+      "notes": null,
+      "icon": "https://s4.anilist.co/file/anilistcdn/link/icon/17-R0tMgOvwvhsS.png",
+      "color": "#000000"
+    },
+    {
+      "id": 84361,
+      "url": "https://www.tiktok.com/@konosubaanime_pr",
+      "type": "SOCIAL",
+      "notes": null,
+      "icon": "https://s4.anilist.co/file/anilistcdn/link/icon/196-o2g5cLUG6k5V.png",
+      "color": "#010101"
+    },
+    {
+      "id": 88146,
+      "url": "https://www.crunchyroll.com/series/GYE5K3GQR/konosuba--gods-blessing-on-this-wonderful-world",
+      "type": "STREAMING",
+      "notes": null,
+      "icon": "https://s4.anilist.co/file/anilistcdn/link/icon/5-AWN2pVlluCOO.png",
+      "color": "#F88B24"
+    },
+    {
+      "id": 90100,
+      "url": "https://www.bilibili.tv/en/media/2106744",
+      "type": "STREAMING",
+      "notes": null,
+      "icon": "https://s4.anilist.co/file/anilistcdn/link/icon/119-NCwGvCjFADGQ.png",
+      "color": "#00A1D6"
+    },
+    {
+      "id": 90101,
+      "url": "https://www.youtube.com/playlist?list=PLxSscENEp7JhqZQW_-rc90fYAIV5dymcF",
+      "type": "STREAMING",
+      "notes": "Ani-One Asia",
+      "icon": "https://s4.anilist.co/file/anilistcdn/link/icon/13-ZwR1Xwgtyrwa.png",
+      "color": "#FF0000"
+    },
+    {
+      "id": 90443,
+      "url": "https://www.iq.com/album/16ucpowk1tp",
+      "type": "STREAMING",
+      "notes": null,
+      "icon": "https://s4.anilist.co/file/anilistcdn/link/icon/122-EPBJ2E0oPt5C.png",
+      "color": "#00CC36"
+    }
+  ],
+  "recommendations": {
+    "nodes": [
+      {
+        "media": {
+          "id": 136804
+        }
+      },
+      {
+        "media": {
+          "id": 136804
+        }
+      }
+    ]
+  },
+  "siteUrl": "https://anilist.co/anime/136804"
+}

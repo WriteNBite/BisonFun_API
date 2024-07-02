@@ -1,0 +1,39 @@
+type Query{
+    #Get User by id
+    user(id: Int!): User
+    userByUsername(username: String!): User
+    #Find VideoContent by id and external id
+    "Get Video Content by id"
+    videoContent(id: Long!): VideoContent
+    "Get Video Content by AniList id"
+    videoContentByAniListId(aniListId: Int!): VideoContent
+    "Get Video Content by TheMovieDatabase id"
+    videoContentByTmdbId(tmdbId: Int!, format: VideoContentFormat! = MOVIE): VideoContent
+    "Get Video Content by MyAnimeList id"
+    videoContentByMalId(malId: Int!): VideoContent
+    "Get Video Content by IMDB id"
+    videoContentByImdbId(imdbId: String!): VideoContent
+    "Get Trending Video Content."
+    trendVideoContent: TrendVideoContentResponse
+
+    "Get User's Video Content List by category of content and status of consuming list"
+    userVideoContentList(
+        userId: Int!
+        filter: UserVideoContentListFilterInput,
+        page: Int = 1
+    ): UserVideoContentListConnection
+    "Get Video Content watch information by User and video content id"
+    userVideoContent(
+        userId: Int!
+        contentId: Long!
+    ): UserVideoContentListElement
+
+    "Make a search query to find Video Content by Category"
+    search(query: String!, category: VideoContentCategory!, formats: [VideoContentFormat] = [MOVIE, TV, SPECIAL, MUSIC, UNKNOWN], page: Int = 1): BasicInfoConnection
+
+    "Get random video content from authorised list"
+    whatToWatch(
+        userId: Int!
+        input: UserVideoContentListFilterInput
+    ): BasicInfo
+}

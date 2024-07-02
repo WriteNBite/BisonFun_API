@@ -1,0 +1,28 @@
+query userVideoContentTest{
+    userVideoContent(userId: 1, contentId: 2){
+        user {
+            id
+            email
+            username
+        }
+        videoContent {
+            id
+            title {
+                english
+            }
+            poster
+            category
+            format
+            externalIds {
+                imdbId
+                tmdbId
+                malId
+                aniListId
+            }
+            year
+        }
+        episodes
+        score
+        status
+    }
+}

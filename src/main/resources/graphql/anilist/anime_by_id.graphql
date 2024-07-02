@@ -1,0 +1,66 @@
+query GetAnimeById($id: Int){
+    Media(id: $id, type: ANIME){
+        id
+        idMal
+        coverImage{
+            extraLarge
+        }
+        title{
+            romaji
+            english
+        }
+        averageScore
+        format
+        episodes
+        duration
+        status
+        startDate{
+            day
+            month
+            year
+        }
+        endDate{
+            day
+            month
+            year
+        }
+        genres
+        studios{
+            nodes{
+                name
+            }
+        }
+        externalLinks {
+            color
+            icon
+            isDisabled
+            language
+            notes
+            site
+            type
+            url
+        }
+        synonyms
+        description
+        recommendations {
+            nodes {
+                mediaRecommendation {
+                    id
+                    coverImage {
+                        large
+                    }
+                    title {
+                        romaji
+                        english
+                    }
+                    format
+                    startDate {
+                        day
+                        month
+                        year
+                    }
+                }
+            }
+        }
+    }
+}

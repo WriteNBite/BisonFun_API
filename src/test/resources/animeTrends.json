@@ -1,0 +1,407 @@
+{
+  "pageInfo": {
+    "perPage": 25
+  },
+  "media": [
+    {
+      "id": 136804,
+      "title": {
+        "romaji": "Kono Subarashii Sekai ni Shukufuku wo! 3",
+        "english": "KONOSUBA -God's Blessing on This Wonderful World! 3"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx136804-7FVftG67FPBc.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 10,
+        "month": 4,
+        "year": 2024
+      }
+    },
+    {
+      "id": 178025,
+      "title": {
+        "romaji": "Gachiakuta",
+        "english": null
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx178025-Q0r1Y7fjraKf.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": null,
+        "month": null,
+        "year": 2025
+      }
+    },
+    {
+      "id": 21,
+      "title": {
+        "romaji": "ONE PIECE",
+        "english": "ONE PIECE"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx21-YCDoj1EkAxFn.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 20,
+        "month": 10,
+        "year": 1999
+      }
+    },
+    {
+      "id": 153288,
+      "title": {
+        "romaji": "Kaijuu 8-gou",
+        "english": "Kaiju No.8"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx153288-tD2OmKy5CJab.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 13,
+        "month": 4,
+        "year": 2024
+      }
+    },
+    {
+      "id": 166240,
+      "title": {
+        "romaji": "Kimetsu no Yaiba: Hashira Geiko-hen",
+        "english": "Demon Slayer: Kimetsu no Yaiba Hashira Training Arc"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx166240-PBV7zukIHW7V.png"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 12,
+        "month": 5,
+        "year": 2024
+      }
+    },
+    {
+      "id": 153518,
+      "title": {
+        "romaji": "Dungeon Meshi",
+        "english": "Delicious in Dungeon"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx153518-LEK6pAXtI03D.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 4,
+        "month": 1,
+        "year": 2024
+      }
+    },
+    {
+      "id": 166873,
+      "title": {
+        "romaji": "Mushoku Tensei II: Isekai Ittara Honki Dasu Part 2",
+        "english": "Mushoku Tensei: Jobless Reincarnation Season 2 Part 2"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx166873-JC56ExYSC2YB.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 8,
+        "month": 4,
+        "year": 2024
+      }
+    },
+    {
+      "id": 170130,
+      "title": {
+        "romaji": "Lv2 Kara Cheat datta Moto Yuusha Kouho no Mattari Isekai Life",
+        "english": "Chillin' in Another World with Level 2 Super Cheat Powers"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx170130-tvhn13WYQ2qM.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 8,
+        "month": 4,
+        "year": 2024
+      }
+    },
+    {
+      "id": 174653,
+      "title": {
+        "romaji": "Kenka Dokugaku",
+        "english": "Viral Hit"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx174653-OsnK4BuENjUT.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 11,
+        "month": 4,
+        "year": 2024
+      }
+    },
+    {
+      "id": 155890,
+      "title": {
+        "romaji": "Bartender: Kami no Glass",
+        "english": "BARTENDER Glass of God"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx155890-1dhQgpT8wYkF.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 4,
+        "month": 4,
+        "year": 2024
+      }
+    },
+    {
+      "id": 151380,
+      "title": {
+        "romaji": "Date A Live V",
+        "english": "Date A Live V"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx151380-gvN5PjrybTw2.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 10,
+        "month": 4,
+        "year": 2024
+      }
+    },
+    {
+      "id": 163270,
+      "title": {
+        "romaji": "WIND BREAKER",
+        "english": "WIND BREAKER"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx163270-oxwgbe43Cpog.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 5,
+        "month": 4,
+        "year": 2024
+      }
+    },
+    {
+      "id": 156415,
+      "title": {
+        "romaji": "Tensei Shitara Dai Nana Ouji Dattanode, Kimamani Majutsu wo Kiwamemasu",
+        "english": "I Was Reincarnated as the 7th Prince So I Can Take My Time Perfecting My Magical Ability"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx156415-zwP9deA786S1.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 2,
+        "month": 4,
+        "year": 2024
+      }
+    },
+    {
+      "id": 154587,
+      "title": {
+        "romaji": "Sousou no Frieren",
+        "english": "Frieren: Beyond Journey’s End"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx154587-gHSraOSa0nBG.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 29,
+        "month": 9,
+        "year": 2023
+      }
+    },
+    {
+      "id": 163139,
+      "title": {
+        "romaji": "Boku no Hero Academia 7",
+        "english": "My Hero Academia Season 7"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx163139-JchZhUFlNTWU.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 4,
+        "month": 5,
+        "year": 2024
+      }
+    },
+    {
+      "id": 156822,
+      "title": {
+        "romaji": "Tensei Shitara Slime Datta Ken 3rd Season",
+        "english": "That Time I Got Reincarnated as a Slime Season 3"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx156822-Jzo2ITWgm4kM.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 5,
+        "month": 4,
+        "year": 2024
+      }
+    },
+    {
+      "id": 160090,
+      "title": {
+        "romaji": "Kaii to Otome to Kamikakushi",
+        "english": "Mysterious Disappearances"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx160090-EHP57CniSa7I.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 10,
+        "month": 4,
+        "year": 2024
+      }
+    },
+    {
+      "id": 139518,
+      "title": {
+        "romaji": "Tsuki ga Michibiku Isekai Douchuu 2nd Season",
+        "english": "TSUKIMICHI -Moonlit Fantasy- Season 2"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx139518-GZWYKM8Kg1S2.png"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 8,
+        "month": 1,
+        "year": 2024
+      }
+    },
+    {
+      "id": 145728,
+      "title": {
+        "romaji": "Ookami to Koushinryou: MERCHANT MEETS THE WISE WOLF",
+        "english": "Spice and Wolf: MERCHANT MEETS THE WISE WOLF"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx145728-YUKXjN2E81Pq.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 2,
+        "month": 4,
+        "year": 2024
+      }
+    },
+    {
+      "id": 159039,
+      "title": {
+        "romaji": "Seiyuu Radio no Uraomote",
+        "english": "The Many Sides of Voice Actor Radio"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx159039-88kPltmhTzqU.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 10,
+        "month": 4,
+        "year": 2024
+      }
+    },
+    {
+      "id": 169417,
+      "title": {
+        "romaji": "Re:Monster",
+        "english": "Re:Monster"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx169417-izsfKg0hasRd.png"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 2,
+        "month": 4,
+        "year": 2024
+      }
+    },
+    {
+      "id": 158709,
+      "title": {
+        "romaji": "Unnamed Memory",
+        "english": "Unnamed Memory"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx158709-WFA0RHloDvPl.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 9,
+        "month": 4,
+        "year": 2024
+      }
+    },
+    {
+      "id": 269,
+      "title": {
+        "romaji": "BLEACH",
+        "english": "Bleach"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx269-wc062RMqud8B.png"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 5,
+        "month": 10,
+        "year": 2004
+      }
+    },
+    {
+      "id": 158417,
+      "title": {
+        "romaji": "Sentai Daishikkaku",
+        "english": "GO! GO! Loser Ranger!"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx158417-2jUaUdiGBZQ8.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 7,
+        "month": 4,
+        "year": 2024
+      }
+    },
+    {
+      "id": 145064,
+      "title": {
+        "romaji": "Jujutsu Kaisen 2nd Season",
+        "english": "JUJUTSU KAISEN Season 2"
+      },
+      "coverImage": {
+        "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx145064-FwX2pzE4mS8Q.jpg"
+      },
+      "format": "TV",
+      "startDate": {
+        "day": 6,
+        "month": 7,
+        "year": 2023
+      }
+    }
+  ]
+}

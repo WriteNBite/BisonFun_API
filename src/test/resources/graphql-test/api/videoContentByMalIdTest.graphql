@@ -1,0 +1,47 @@
+query videoContentByMalIdTest{
+    videoContentByMalId(malId: 34){
+        basicInfo{
+            id
+            title{
+                english
+            }
+            year
+            category
+            format
+            poster
+            externalIds{
+                tmdbId
+                aniListId
+                imdbId
+                malId
+            }
+        }
+        externalInfo{
+            synonyms
+            meanScore
+            studios{
+                name
+            }
+            status
+            startDate
+            endDate
+            episodes
+            seasons
+            duration
+            genres
+            description
+            recommendations{
+                title{
+                    english
+                }
+                year
+                poster
+                category
+                format
+            }
+            networks {
+                url
+            }
+        }
+    }
+}

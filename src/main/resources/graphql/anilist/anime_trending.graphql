@@ -1,0 +1,23 @@
+query trends{
+    Page(perPage: 25) {
+        pageInfo{
+            perPage
+        }
+        media(type: ANIME, isAdult: false, sort: TRENDING_DESC) {
+            id
+            title {
+                romaji
+                english
+            }
+            coverImage{
+                large
+            }
+            format
+            startDate{
+                day
+                month
+                year
+            }
+        }
+    }
+}

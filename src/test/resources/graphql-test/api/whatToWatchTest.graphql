@@ -1,0 +1,18 @@
+query whatToWatchTest{
+    whatToWatch(userId: 1){
+        id
+        title {
+            english
+        }
+        poster
+        category
+        format
+        externalIds {
+            imdbId
+            tmdbId
+            malId
+            aniListId
+        }
+        year
+    }
+}

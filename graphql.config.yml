@@ -1,0 +1,4 @@
+schema:
+  - src/main/resources/graphql/api/*.graphqls
+  - https://graphql.anilist.co
+documents: '**/*.graphql'

@@ -1,0 +1,37 @@
+query userVideoContentListTest{
+    userVideoContentList(userId: 1){
+        pageInfo {
+            total
+            perPage
+            currentPage
+            lastPage
+            hasNextPage
+        }
+        nodes {
+            user {
+                id
+                email
+                username
+            }
+            videoContent {
+                id
+                title {
+                    english
+                }
+                poster
+                category
+                format
+                externalIds {
+                    imdbId
+                    tmdbId
+                    malId
+                    aniListId
+                }
+                year
+            }
+            episodes
+            score
+            status
+        }
+    }
+}

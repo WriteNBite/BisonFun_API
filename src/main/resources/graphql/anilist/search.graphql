@@ -1,0 +1,27 @@
+query getAnimeList($query: String, $page: Int, $formats: [MediaFormat]){
+    Page(page: $page, perPage: 20){
+        pageInfo{
+            perPage
+            currentPage
+            lastPage
+            hasNextPage
+        }
+        media(search: $query, type: ANIME, isAdult: false, format_in: $formats){
+            id
+            idMal
+            coverImage{
+                large
+            }
+            title{
+                romaji
+                english
+            }
+            format
+            startDate{
+                day
+                month
+                year
+            }
+        }
+    }
+}

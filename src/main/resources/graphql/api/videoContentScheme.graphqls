@@ -1,0 +1,98 @@
+type VideoContent{
+    basicInfo: BasicInfo
+    externalInfo: ExternalInfo
+}
+
+"A basic info that's available about video content. Content Id could be null in cases if that's content is not part of service yet"
+type BasicInfo{
+    id: Long
+    title: VideoContentTitle
+    poster: String
+    category: VideoContentCategory
+    format: VideoContentFormat
+    externalIds: ExternalId
+    year: Int
+}
+
+type ExternalInfo {
+    status: VideoContentStatus
+    description: String
+    startDate: Date
+    endDate: Date
+    episodes: Int
+    seasons: Int
+    duration: Int
+    genres: [String]
+    synonyms: [String]
+    meanScore: Float
+    studios: [Studio]
+    networks: [Network]
+    recommendations: [BasicInfo]
+}
+
+type VideoContentEdge {
+    nodes: [VideoContent]
+    pageInfo: PageInfo!
+}
+
+type BasicInfoConnection{
+    nodes: [BasicInfo]
+    pageInfo: PageInfo!
+}
+
+type PageInfo {
+    total: Int
+    perPage: Int
+    currentPage: Int
+    lastPage: Int
+    hasNextPage: Boolean
+}
+
+type Network {
+    url: String
+    icon: String
+    color: String
+}
+
+type Studio {
+    name: String
+}
+
+type ExternalId {
+    aniListId: Int
+    tmdbId: Int
+    malId: Int
+    imdbId: String
+}
+
+enum VideoContentStatus {
+    FINISHED
+    ONGOING
+    RUMORED
+    NOT_YET_RELEASED
+    CANCELED
+    PAUSED
+}
+
+type VideoContentTitle {
+    english: String
+}
+
+enum VideoContentFormat {
+    MOVIE
+    TV
+    SPECIAL
+    MUSIC
+    UNKNOWN
+}
+
+enum VideoContentCategory {
+    MAINSTREAM
+    ANIME
+}
+
+type TrendVideoContentResponse{
+    animeTrends: [BasicInfo]
+    movieTrends: [BasicInfo]
+    tvTrends: [BasicInfo]
+}
