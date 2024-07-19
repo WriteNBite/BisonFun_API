@@ -1,5 +1,5 @@
 query whatToWatchTest{
-    whatToWatch(userId: 1){
+    whatToWatch{
         id
         title {
             english

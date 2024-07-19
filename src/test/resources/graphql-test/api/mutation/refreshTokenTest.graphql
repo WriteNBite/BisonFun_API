@@ -1,0 +1,6 @@
+mutation refreshTokenTest{
+    refreshToken {
+        token
+        refresh
+    }
+}

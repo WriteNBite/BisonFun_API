@@ -4,5 +4,21 @@
       "name": "bisonfun.tmdb.key",
       "type": "java.lang.String",
       "description": "Key for TMDB API."
-  }
-] }
+    },
+    {
+      "name": "bisonfun.jwt.secret",
+      "type": "java.lang.String",
+      "description": "Secret Key for signing the access JWT."
+    },
+    {
+      "name": "bisonfun.jwt.time.access",
+      "type": "java.lang.Long",
+      "description": "Expiration time in millis for access token."
+    },
+    {
+      "name": "bisonfun.jwt.time.refresh",
+      "type": "java.lang.Long",
+      "description": "Expiration time in millis for refresh token."
+    }
+  ]
+}

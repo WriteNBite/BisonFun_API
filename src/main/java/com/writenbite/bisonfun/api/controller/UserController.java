@@ -1,7 +1,7 @@
 package com.writenbite.bisonfun.api.controller;
 
 import com.writenbite.bisonfun.api.service.UserService;
-import com.writenbite.bisonfun.api.types.User;
+import com.writenbite.bisonfun.api.types.user.User;
 import com.writenbite.bisonfun.api.types.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.graphql.data.method.annotation.Argument;
@@ -22,9 +22,9 @@ public class UserController {
     }
 
     @QueryMapping
-    public User user(@Argument int id){
+    public User user(@Argument int id) {
         Optional<com.writenbite.bisonfun.api.database.entity.User> optionalUser = userService.getUserById(id);
-        if (optionalUser.isEmpty()){
+        if (optionalUser.isEmpty()) {
             return null;
         }
         com.writenbite.bisonfun.api.database.entity.User userDb = optionalUser.get();
@@ -32,9 +32,9 @@ public class UserController {
     }
 
     @QueryMapping
-    public User userByUsername(@Argument String username){
+    public User userByUsername(@Argument String username) {
         Optional<com.writenbite.bisonfun.api.database.entity.User> optionalUser = userService.getUserByUsername(username.toLowerCase());
-        if(optionalUser.isEmpty()){
+        if (optionalUser.isEmpty()) {
             return null;
         }
         com.writenbite.bisonfun.api.database.entity.User userDb = optionalUser.get();

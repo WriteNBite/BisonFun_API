@@ -1,0 +1,6 @@
+mutation loginTest{
+    login(username: "user", password: "password"){
+        token
+        refresh
+    }
+}

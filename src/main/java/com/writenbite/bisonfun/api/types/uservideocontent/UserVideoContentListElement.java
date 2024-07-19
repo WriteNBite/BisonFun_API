@@ -1,6 +1,6 @@
 package com.writenbite.bisonfun.api.types.uservideocontent;
 
-import com.writenbite.bisonfun.api.types.User;
+import com.writenbite.bisonfun.api.types.user.User;
 import com.writenbite.bisonfun.api.types.videocontent.VideoContent;
 
 public record UserVideoContentListElement(
