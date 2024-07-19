@@ -1,4 +1,12 @@
 type Mutation{
+    "Authenticate to service"
+    login(username: String!, password: String!): TokenPayload
+    "Create a user"
+    register(input: RegisterInput): User!
+    "Get new access token. Refresh token needed"
+    refreshAccessToken: AccessTokenResponse
+    "Get new refresh token. Non-expired refresh token needed."
+    refreshToken: TokenPayload
     "Update Element from User Video Content List"
     updateUserVideoContentListElement(input: UpdateUserVideoContentListElementInput): UpdateUserVideoContentListElementPayload
     deleteUserVideoContentListElement(input: DeleteUserVideoContentListElementInput): DeleteUserVideoContentListElementPayload

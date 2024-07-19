@@ -1,5 +1,33 @@
+"A user"
 type User{
+    "The id of the user"
     id: Int!
+    "The email of the user"
     email: String
+    "Username of the user"
     username: String
+}
+
+"Tokens for authenticated user"
+type TokenPayload{
+    "Access token"
+    token: String!
+    "Refresh token"
+    refresh: String!
+}
+
+"New access token for the authenticated user"
+type AccessTokenResponse{
+    "New access token"
+    token: String!
+}
+
+"Info needed to create a user"
+input RegisterInput{
+    "Username of the new user which should be unique"
+    username: String!
+    "The email of the user which should be unique"
+    email: String!
+    "Password of the user"
+    password: String!
 }

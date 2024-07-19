@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
@@ -36,6 +37,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SpringExtension.class)
+@ActiveProfiles("test")
 @SpringBootTest
 public class VideoContentBasicInfoMapperTest {
     @Mock
@@ -64,7 +66,7 @@ public class VideoContentBasicInfoMapperTest {
     public void testMovieMapping() throws JsonProcessingException {
         TmdbClient tmdbClient = new TmdbClient(parser, new ObjectMapper());
         when(parser.getMovieById(872585)).thenReturn(new JSONObject(oppenheimer));
-        MovieDb movie =  tmdbClient.parseMovieById(872585);
+        MovieDb movie = tmdbClient.parseMovieById(872585);
         VideoContent videoContent = videoContentMapper.fromMovieDb(movie);
 
         System.out.println(movie.toString());
@@ -75,11 +77,12 @@ public class VideoContentBasicInfoMapperTest {
         Assertions.assertEquals(VideoContentCategory.MAINSTREAM, videoContent.getCategory());
         Assertions.assertEquals("tt15398776", videoContent.getImdbId());
     }
+
     @Test
     public void testTvMapping() throws JsonProcessingException {
         TmdbClient tmdbClient = new TmdbClient(parser, new ObjectMapper());
         when(parser.getShowById(85937)).thenReturn(new JSONObject(demonSlayer));
-        TvSeriesDb tvSeriesDb =  tmdbClient.parseShowById(85937);
+        TvSeriesDb tvSeriesDb = tmdbClient.parseShowById(85937);
         VideoContent videoContent = videoContentMapper.fromTvSeriesDb(tvSeriesDb);
 
         System.out.println(tvSeriesDb.toString());
@@ -90,11 +93,12 @@ public class VideoContentBasicInfoMapperTest {
         Assertions.assertEquals(VideoContentCategory.MAINSTREAM, videoContent.getCategory());
         Assertions.assertEquals("tt9335498", videoContent.getImdbId());
     }
+
     @Test
     public void testAnimeMapping() throws ContentNotFoundException, TooManyAnimeRequestsException {
         AniListClient aniListClient = new AniListClient(aniListApiResponse, new Gson());
         when(aniListApiResponse.getAnimeById(136804)).thenReturn(new JSONObject(konosuba));
-        AniListMedia aniListMedia =  aniListClient.parseAnimeById(136804);
+        AniListMedia aniListMedia = aniListClient.parseAnimeById(136804);
         VideoContent videoContent = videoContentMapper.fromAniListMedia(aniListMedia);
 
         System.out.println(aniListMedia.toString());
