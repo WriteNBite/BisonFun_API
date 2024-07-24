@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMedia;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaPage;
 import com.writenbite.bisonfun.api.client.anilist.types.AniListPage;
-import kong.unirest.json.JSONObject;
+import kong.unirest.core.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;

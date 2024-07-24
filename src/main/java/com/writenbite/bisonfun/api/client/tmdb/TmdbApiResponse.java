@@ -2,10 +2,10 @@ package com.writenbite.bisonfun.api.client.tmdb;
 
 import com.writenbite.bisonfun.api.client.NoAccessException;
 import com.writenbite.bisonfun.api.client.tmdb.types.TmdbContentType;
-import kong.unirest.GetRequest;
-import kong.unirest.HttpResponse;
-import kong.unirest.Unirest;
-import kong.unirest.json.JSONObject;
+import kong.unirest.core.GetRequest;
+import kong.unirest.core.HttpResponse;
+import kong.unirest.core.Unirest;
+import kong.unirest.core.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;

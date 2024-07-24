@@ -15,7 +15,7 @@ import com.writenbite.bisonfun.api.database.entity.VideoContentCategory;
 import com.writenbite.bisonfun.api.database.mapper.VideoContentMapper;
 import info.movito.themoviedbapi.model.movies.MovieDb;
 import info.movito.themoviedbapi.model.tv.series.TvSeriesDb;
-import kong.unirest.json.JSONObject;
+import kong.unirest.core.json.JSONObject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
