@@ -8,7 +8,6 @@ import kong.unirest.core.Unirest;
 import kong.unirest.core.json.JSONArray;
 import kong.unirest.core.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
@@ -65,7 +64,6 @@ public class AniListApiResponse {
      * @throws TooManyAnimeRequestsException if Anilist.co have got more requests than limit from app's account.
      * @throws NoAccessException if app can't access to Anilist.co API.
      */
-    @Cacheable("animeTrends")
     public JSONObject getAnimeTrends() throws TooManyAnimeRequestsException, NoAccessException {
         log.info("Get anime trends");
         HttpResponse<String> result;
@@ -97,7 +95,7 @@ public class AniListApiResponse {
      * @throws TooManyAnimeRequestsException if Anilist.co have got more requests than limit from app's account.
      * @throws ContentNotFoundException if there's no such anime in database.
      */
-    @Cacheable("jsonAnime")
+
     public JSONObject getAnimeById(int id) throws TooManyAnimeRequestsException, ContentNotFoundException {
         log.info("Get Anime: {}", id);
         String variables = "{\n" +
@@ -133,7 +131,7 @@ public class AniListApiResponse {
      * @throws TooManyAnimeRequestsException if Anilist.co have got more requests than limit from app's account.
      * @throws ContentNotFoundException if there's no such anime in database.
      */
-    @Cacheable("jsonAnime")
+
     public JSONObject getAnimeByName(String name) throws TooManyAnimeRequestsException, ContentNotFoundException {
         log.info("Get Anime: {}", name);
         String variables = "{\n" +

@@ -4,6 +4,7 @@ import com.writenbite.bisonfun.api.client.anilist.types.AniListFuzzyDate;
 import com.writenbite.bisonfun.api.client.anilist.types.AniListRecommendationConnection;
 import com.writenbite.bisonfun.api.client.anilist.types.AniListStudioConnection;
 
+import java.io.Serializable;
 import java.util.List;
 
 public record AniListMedia(
@@ -36,5 +37,5 @@ public record AniListMedia(
         List<AniListMediaExternalLink> externalLinks,
         AniListRecommendationConnection recommendations,
         String siteUrl
-) {
+) implements Serializable {
 }

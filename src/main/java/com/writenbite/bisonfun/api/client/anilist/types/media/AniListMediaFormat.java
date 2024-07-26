@@ -1,6 +1,8 @@
 package com.writenbite.bisonfun.api.client.anilist.types.media;
 
-public enum AniListMediaFormat {
+import java.io.Serializable;
+
+public enum AniListMediaFormat implements Serializable {
     TV,
     TV_SHORT,
     MOVIE,

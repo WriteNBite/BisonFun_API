@@ -10,6 +10,7 @@ import com.writenbite.bisonfun.api.client.anilist.types.AniListPage;
 import kong.unirest.core.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -41,6 +42,7 @@ public class AniListClient {
         return mediaPage;
     }
     //parse anime trends
+    @Cacheable("animeTrends")
     public AniListPage<AniListMedia> parseAnimeTrends() throws TooManyAnimeRequestsException {
         log.debug("Parsing Anime Trends");
         JSONObject root;
@@ -56,10 +58,12 @@ public class AniListClient {
         return mediaPage;
     }
     //parse anime(as VideoEntertainment)
+    @Cacheable("jsonAnime")
     public AniListMedia parseAnimeById(int aniListId) throws ContentNotFoundException, TooManyAnimeRequestsException {
         JSONObject jsonAnime = aniListApiResponse.getAnimeById(aniListId);
         return parseAnime(jsonAnime);
     }
+    @Cacheable("jsonAnime")
     public AniListMedia parseAnimeByName(String name) throws ContentNotFoundException, TooManyAnimeRequestsException {
         JSONObject jsonAnime = aniListApiResponse.getAnimeByName(name);
         return parseAnime(jsonAnime);

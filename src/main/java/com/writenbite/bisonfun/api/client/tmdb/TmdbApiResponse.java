@@ -8,7 +8,6 @@ import kong.unirest.core.Unirest;
 import kong.unirest.core.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,7 +24,7 @@ public class TmdbApiResponse {
      * @param id identification number from TheMovieDB database.
      * @return JSONObject with info about movie (id, title, description, etc.).
      */
-    @Cacheable("jsonMovie")
+
     public JSONObject getMovieById(int id){
         log.info("Get Movie: {}", id);
         //Get JSON of movie by id from TMDB
@@ -53,7 +52,7 @@ public class TmdbApiResponse {
      * @param id identification number from TheMovieDB database.
      * @return JSONObject with info about tv (id, title, description, etc.).
      */
-    @Cacheable("jsonShow")
+
     public JSONObject getShowById(int id){
         log.info("Get TV: {}", id);
         // get JSON of tv-show by id from TMDB
@@ -119,7 +118,7 @@ public class TmdbApiResponse {
      * @return JSONObject with page info(current page, etc.) and JSONArray with movie JSONObjects.
      * @throws NoAccessException if app can't access to TheMovieDB API.
      */
-    @Cacheable("movieTrends")
+
     public JSONObject getMovieTrends() throws NoAccessException {
         log.info("Get movie trends");
         HttpResponse<String> result;
@@ -142,7 +141,7 @@ public class TmdbApiResponse {
      * @return JSONObject with page info(current page, etc.) and JSONArray with tv JSONObjects.
      * @throws NoAccessException if app can't access to TheMovieDB API.
      */
-    @Cacheable("tvTrends")
+
     public JSONObject getTvTrends() throws NoAccessException {
         log.info("Get tv trends");
         HttpResponse<String> result;

@@ -13,6 +13,7 @@ import kong.unirest.core.json.JSONArray;
 import kong.unirest.core.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -28,14 +29,14 @@ public class TmdbClient {
         this.parser = parser;
         this.objectMapper = objectMapper;
     }
-
+    @Cacheable("jsonMovie")
     public MovieDb parseMovieById(int tmdbId) throws JsonProcessingException {
 
         JSONObject root = parser.getMovieById(tmdbId);
 
         return objectMapper.readValue(root.toString(), MovieDb.class);
     }
-
+    @Cacheable("jsonShow")
     public TvSeriesDb parseShowById(int tmdbId) throws JsonProcessingException {
         JSONObject root = parser.getShowById(tmdbId);
 
@@ -73,7 +74,7 @@ public class TmdbClient {
 
         return objectMapper.readValue(stringContent, TvSeriesDb.class);
     }
-
+    @Cacheable("movieTrends")
     public MovieResultsPage parseMovieTrends() throws NoAccessException, JsonProcessingException {
         JSONObject movieTrends = parser.getMovieTrends();
         return objectMapper.readValue(movieTrends.toString(), MovieResultsPage.class);
@@ -83,6 +84,7 @@ public class TmdbClient {
         JSONObject root = parser.getTMDBList(query, TmdbContentType.TV, page);
         return objectMapper.readValue(root.toString(), TvSeriesResultsPage.class);
     }
+    @Cacheable("tvTrends")
     public TvSeriesResultsPage parseTVTrends() throws NoAccessException, JsonProcessingException {
         JSONObject trends = parser.getTvTrends();
         return objectMapper.readValue(trends.toString(), TvSeriesResultsPage.class);
