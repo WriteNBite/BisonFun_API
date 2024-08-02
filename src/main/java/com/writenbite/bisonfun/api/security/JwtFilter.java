@@ -1,12 +1,17 @@
 package com.writenbite.bisonfun.api.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.writenbite.bisonfun.api.service.JwtService;
 import com.writenbite.bisonfun.api.service.TokenUserDetailsService;
+import graphql.GraphQLError;
+import graphql.GraphqlErrorBuilder;
+import graphql.GraphqlErrorHelper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.graphql.execution.ErrorType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,6 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.*;
 
 @Component
 @Slf4j
@@ -23,11 +29,13 @@ public class JwtFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final TokenUserDetailsService userDetailsService;
     private final AuthorityMapper authorityMapper;
+    private final ObjectMapper objectMapper;
 
-    public JwtFilter(JwtService jwtService, TokenUserDetailsService userDetailsService, AuthorityMapper authorityMapper) {
+    public JwtFilter(JwtService jwtService, TokenUserDetailsService userDetailsService, AuthorityMapper authorityMapper, ObjectMapper objectMapper) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
         this.authorityMapper = authorityMapper;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -47,7 +55,16 @@ public class JwtFilter extends OncePerRequestFilter {
                 username = tokenHolder.extractUserName();
             } catch (TokenExpiredException | TokenValidationException e) {
                 log.warn(e.getMessage());
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+                response.setContentType("application/json");
+                response.setStatus(401);
+                GraphQLError error = GraphqlErrorBuilder.newError()
+                        .message(e.getMessage())
+                        .errorType(ErrorType.UNAUTHORIZED)
+                        .build();
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("errors", List.of(GraphqlErrorHelper.toSpecification(error)));
+                objectMapper.writeValue(response.getWriter(), errorResponse);
+                return;
             }
         }
 
