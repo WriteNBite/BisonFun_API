@@ -19,6 +19,16 @@
       "name": "bisonfun.jwt.time.refresh",
       "type": "java.lang.Long",
       "description": "Expiration time in millis for refresh token."
+    },
+    {
+      "name": "bisonfun.rate-limit.requests-per-second",
+      "type": "java.lang.Integer",
+      "description": "Rate limit for requests per one second."
+    },
+    {
+      "name": "bisonfun.rate-limit.requests-per-minute",
+      "type": "java.lang.Integer",
+      "description": "Rate limit for requests per one minute."
     }
   ]
 }

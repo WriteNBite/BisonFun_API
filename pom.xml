@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.writenbite</groupId>
     <artifactId>bisonfun-api</artifactId>
-    <version>0.1.2-SNAPSHOT</version>
+    <version>0.1.3-SNAPSHOT</version>
     <name>BisonFun API</name>
     <description>BisonFun GraphQL API</description>
     <properties>
@@ -125,6 +125,16 @@
             <artifactId>jjwt-jackson</artifactId>
             <version>0.11.5</version>
             <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j-core</artifactId>
+            <version>8.10.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j-redis</artifactId>
+            <version>8.10.1</version>
         </dependency>
     </dependencies>
 
