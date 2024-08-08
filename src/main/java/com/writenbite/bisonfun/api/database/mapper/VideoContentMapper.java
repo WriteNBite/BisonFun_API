@@ -15,19 +15,7 @@ import java.sql.Date;
 @Mapper(uses = {VideoContentCategoryMapper.class, AniListMediaCoverImageMapper.class})
 public interface VideoContentMapper {
 
-    @BeforeMapping
-    default void beforeMapping(AniListMedia anime, @MappingTarget VideoContent videoContent) {
-        videoContent.setId(null);
-    }
-    @BeforeMapping
-    default void beforeMapping(MovieDb movie, @MappingTarget VideoContent videoContent) {
-        videoContent.setId(null);
-    }
-    @BeforeMapping
-    default void beforeMapping(TvSeriesDb tv, @MappingTarget VideoContent videoContent) {
-        videoContent.setId(null);
-    }
-
+    @Mapping(target = "id", expression = "java(null)")
     @Mapping(source = "id", target = "aniListId")
     @Mapping(target = "category", constant = "ANIME")
     @Mapping(source = "idMal", target = "malId")
@@ -37,6 +25,7 @@ public interface VideoContentMapper {
     @Mapping(source = "startDate.year", target = "year")
     VideoContent fromAniListMedia(AniListMedia anime);
 
+    @Mapping(target = "id", expression = "java(null)")
     @Mapping(source = "id", target = "tmdbId")
     @Mapping(target = "category", constant = "MAINSTREAM")
     @Mapping(source = "imdbID", target = "imdbId")
@@ -45,6 +34,7 @@ public interface VideoContentMapper {
     @Mapping(target = "year", expression = "java(tmdbYear(movie.getReleaseDate()))")
     VideoContent fromMovieDb(MovieDb movie);
 
+    @Mapping(target = "id", expression = "java(null)")
     @Mapping(source = "id", target = "tmdbId")
     @Mapping(target = "category", constant = "MAINSTREAM")
     @Mapping(source = "externalIds.imdbId", target = "imdbId")
