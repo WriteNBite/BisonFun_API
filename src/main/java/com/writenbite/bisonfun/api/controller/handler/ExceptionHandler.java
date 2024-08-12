@@ -22,12 +22,15 @@ public class ExceptionHandler extends DataFetcherExceptionResolverAdapter {
                 .message(ex.getMessage() != null ? ex.getMessage() : "Unknown error");
         if (ex instanceof ContentNotFoundException || ex instanceof UserNotFoundException) {
             errorBuilder.errorType(ErrorType.NOT_FOUND);
-        } else if (ex instanceof TokenValidationException || ex instanceof BadCredentialsException) {
+        } else if (ex instanceof TokenValidationException || ex instanceof BadCredentialsException || ex instanceof IllegalArgumentException) {
             errorBuilder.errorType(ErrorType.BAD_REQUEST);
         } else if (ex instanceof TokenExpiredException || ex instanceof AuthenticationCredentialsNotFoundException || ex instanceof AuthorizationDeniedException) {
             errorBuilder.errorType(ErrorType.UNAUTHORIZED);
         } else {
-            errorBuilder.errorType(ErrorType.INTERNAL_ERROR);
+            logger.error(ex.getMessage(), ex);
+            errorBuilder
+                    .message("Something went wrong")
+                    .errorType(ErrorType.INTERNAL_ERROR);
         }
         return errorBuilder.build();
     }
