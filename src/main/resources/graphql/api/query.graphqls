@@ -4,15 +4,17 @@ type Query{
     userByUsername(username: String!): User
     #Find VideoContent by id and external id
     "Get Video Content by id"
-    videoContent(id: Long!): VideoContent
+    videoContent(id: Long!): VideoContent @deprecated(reason: "Use videoContentByIdInput")
     "Get Video Content by AniList id"
-    videoContentByAniListId(aniListId: Int!): VideoContent
+    videoContentByAniListId(aniListId: Int!): VideoContent @deprecated(reason: "Use videoContentByIdInput")
     "Get Video Content by TheMovieDatabase id"
-    videoContentByTmdbId(tmdbId: Int!, format: VideoContentFormat! = MOVIE): VideoContent
+    videoContentByTmdbId(tmdbId: Int!, format: VideoContentFormat! = MOVIE): VideoContent @deprecated(reason: "Use videoContentByIdInput")
     "Get Video Content by MyAnimeList id"
-    videoContentByMalId(malId: Int!): VideoContent
+    videoContentByMalId(malId: Int!): VideoContent @deprecated(reason: "Use videoContentByIdInput")
     "Get Video Content by IMDB id"
-    videoContentByImdbId(imdbId: String!): VideoContent
+    videoContentByImdbId(imdbId: String!): VideoContent @deprecated(reason: "Use videoContentByIdInput")
+    "Get Video Content by one of id's"
+    videoContentByIdInput(input: VideoContentIdInput): VideoContent
     "Get Trending Video Content."
     trendVideoContent: TrendVideoContentResponse
 

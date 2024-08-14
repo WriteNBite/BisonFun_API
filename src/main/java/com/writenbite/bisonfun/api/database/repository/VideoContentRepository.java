@@ -26,5 +26,7 @@ public interface VideoContentRepository extends JpaRepository<VideoContent, Long
     Optional<VideoContent> findByImdbId(String imdbId);
     Optional<VideoContent> findByMalId(Integer malId);
 
+    boolean existsByAniListId(Integer aniListId);
 
+    boolean existsByTmdbIdAndType(Integer tmdbId, VideoContentType type);
 }

@@ -57,7 +57,7 @@ public interface VideoContentBasicInfoMapper {
     List<VideoContent.BasicInfo> fromMovies(List<Movie> movies);
 
     @Mapping(target = "id", expression = "java(null)")
-    @Mapping(target = "externalIds", expression = "java(tmdbExternalId(tv.getId(), tv.getExternalIds().getImdbId()))")
+    @Mapping(target = "externalIds", expression = "java(tmdbExternalId(tv.getId(), tv.getExternalIds() != null ? tv.getExternalIds().getImdbId() : null))")
     @Mapping(target = "category", constant = "MAINSTREAM")
     @Mapping(target = "poster", source = "posterPath")
     @Mapping(target = "title.english", source = "name")

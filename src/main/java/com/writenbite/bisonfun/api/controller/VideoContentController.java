@@ -1,9 +1,11 @@
 package com.writenbite.bisonfun.api.controller;
 
 import com.writenbite.bisonfun.api.client.ContentNotFoundException;
+import com.writenbite.bisonfun.api.client.anilist.TooManyAnimeRequestsException;
 import com.writenbite.bisonfun.api.service.ExternalInfoException;
 import com.writenbite.bisonfun.api.service.VideoContentService;
 import com.writenbite.bisonfun.api.types.Connection;
+import com.writenbite.bisonfun.api.types.videocontent.input.VideoContentIdInput;
 import com.writenbite.bisonfun.api.types.videocontent.*;
 import com.writenbite.bisonfun.api.types.videocontent.output.TrendVideoContentResponse;
 import graphql.GraphQLError;
@@ -131,6 +133,16 @@ public class VideoContentController {
                                     .build()
                     );
         }
+        return builder.build();
+    }
+
+    @QueryMapping
+    public DataFetcherResult<VideoContent> videoContentByIdInput(@Argument VideoContentIdInput input, DataFetchingEnvironment environment) throws ContentNotFoundException, TooManyAnimeRequestsException, ExternalInfoException {
+        List<SelectedField> fields = new ArrayList<>(environment.getSelectionSet()
+                .getFields());
+        boolean hasExternalInfo = fields.stream().anyMatch(field -> field.getQualifiedName().equalsIgnoreCase("ExternalInfo"));
+        DataFetcherResult.Builder<VideoContent> builder = DataFetcherResult.newResult();
+        builder.data(videoContentService.getVideoContentByIdInput(input, hasExternalInfo));
         return builder.build();
     }
 

@@ -91,6 +91,17 @@ enum VideoContentCategory {
     ANIME
 }
 
+input VideoContentIdInput{
+    videoContentId: Long
+    aniListId: Int
+    tmdbIdInput: TmdbIdInput
+}
+
+input TmdbIdInput{
+    tmdbId: Int!
+    format: VideoContentFormat!
+}
+
 type TrendVideoContentResponse{
     animeTrends: [BasicInfo]
     movieTrends: [BasicInfo]

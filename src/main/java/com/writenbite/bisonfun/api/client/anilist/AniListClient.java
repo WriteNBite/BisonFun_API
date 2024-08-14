@@ -59,9 +59,12 @@ public class AniListClient {
     }
     //parse anime(as VideoEntertainment)
     @Cacheable("jsonAnime")
-    public AniListMedia parseAnimeById(int aniListId) throws ContentNotFoundException, TooManyAnimeRequestsException {
-        JSONObject jsonAnime = aniListApiResponse.getAnimeById(aniListId);
-        return parseAnime(jsonAnime);
+    public AniListMedia parseAnimeById(Integer aniListId) throws ContentNotFoundException, TooManyAnimeRequestsException {
+        if(aniListId != null) {
+            JSONObject jsonAnime = aniListApiResponse.getAnimeById(aniListId);
+            return parseAnime(jsonAnime);
+        }
+        return null;
     }
     @Cacheable("jsonAnime")
     public AniListMedia parseAnimeByName(String name) throws ContentNotFoundException, TooManyAnimeRequestsException {

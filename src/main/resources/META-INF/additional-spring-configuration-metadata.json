@@ -29,6 +29,11 @@
       "name": "bisonfun.rate-limit.requests-per-minute",
       "type": "java.lang.Integer",
       "description": "Rate limit for requests per one minute."
+    },
+    {
+      "name": "bisonfun.data-update.range-in-days",
+      "type": "java.lang.Integer",
+      "description": "Range in days between data update from external sources."
     }
   ]
 }

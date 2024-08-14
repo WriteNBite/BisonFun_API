@@ -3,7 +3,9 @@ package com.writenbite.bisonfun.api.database.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 
+import java.time.LocalDate;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -46,6 +48,15 @@ public class VideoContent {
 
     @OneToMany(mappedBy = "videoContent")
     private Set<UserVideoContent> userVideoContents = new LinkedHashSet<>();
+
+    @ColumnDefault("'2000-01-01'")
+    @Column(name = "last_updated", nullable = false)
+    private LocalDate lastUpdated;
+
+    @PrePersist
+    public void prePersist(){
+        lastUpdated = LocalDate.now();
+    }
 
     @Override
     public String toString() {

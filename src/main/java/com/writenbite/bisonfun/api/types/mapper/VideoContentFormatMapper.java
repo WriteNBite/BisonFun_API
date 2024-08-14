@@ -9,6 +9,9 @@ import java.util.*;
 
 @Mapper
 public interface VideoContentFormatMapper {
+
+    VideoContentFormat fromVideoContentType(VideoContentType type);
+
     VideoContentType toVideoContentType(VideoContentFormat format);
 
     default Collection<AniListMediaFormat> toAniListMediaFormat(List<VideoContentFormat> formats){
