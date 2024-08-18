@@ -25,8 +25,7 @@ type UpdateUserVideoContentListElementPayload {
 }
 
 input UpdateUserVideoContentListElementInput {
-    userId: Int!
-    videoContentId: Int!
+    videoContentIdInput: VideoContentIdInput!
     episodes: Int
     score: Int
     status: UserVideoContentListStatus

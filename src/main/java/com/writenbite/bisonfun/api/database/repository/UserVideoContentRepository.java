@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface UserVideoContentRepository extends JpaRepository<UserVideoContent, UserVideoContentId> {
@@ -22,4 +23,9 @@ public interface UserVideoContentRepository extends JpaRepository<UserVideoConte
     Float getMeanScoreByUserAndCategoriesAndTypes(int userId, List<VideoContentCategory> categories, List<VideoContentType> types);
 
     long countDistinctVideoContentById_UserId(Integer userId);
+
+    Optional<UserVideoContent> findById_UserIdAndVideoContent_AniListId(Integer userId, Integer aniListId);
+
+    Optional<UserVideoContent> findById_UserIdAndVideoContent_TmdbIdAndVideoContent_Type(Integer userId, Integer tmdbId, VideoContentType type);
+
 }

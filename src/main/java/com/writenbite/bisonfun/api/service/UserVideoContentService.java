@@ -16,11 +16,15 @@ import com.writenbite.bisonfun.api.types.mapper.UserVideoContentListElementMappe
 import com.writenbite.bisonfun.api.types.mapper.UserVideoContentListStatusMapper;
 import com.writenbite.bisonfun.api.types.mapper.VideoContentBasicInfoMapper;
 import com.writenbite.bisonfun.api.types.mapper.VideoContentFormatMapper;
+import com.writenbite.bisonfun.api.types.uservideocontent.input.UpdateUserVideoContentListElementInput;
+import com.writenbite.bisonfun.api.types.videocontent.input.VideoContentIdInput;
+import com.writenbite.bisonfun.api.types.uservideocontent.output.UpdateUserVideoContentListElementPayload;
 import com.writenbite.bisonfun.api.types.uservideocontent.output.UserVideoContentListConnection;
 import com.writenbite.bisonfun.api.types.uservideocontent.UserVideoContentListElement;
 import com.writenbite.bisonfun.api.types.uservideocontent.input.UserVideoContentListInput;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -33,6 +37,7 @@ import static com.writenbite.bisonfun.api.database.entity.VideoContentCategory.M
 
 @Slf4j
 @Service
+@AllArgsConstructor
 public class UserVideoContentService {
     private final UserVideoContentRepository userVideoContentRepository;
     private final UserVideoContentPageableRepository userVideoContentPageableRepository;
@@ -44,37 +49,7 @@ public class UserVideoContentService {
     private final VideoContentFormatMapper formatMapper;
     private final UserVideoContentListElementMapper userVideoContentListElementMapper;
     private final VideoContentBasicInfoMapper videoContentBasicInfoMapper;
-
-    @Autowired
-    public UserVideoContentService(UserVideoContentRepository userVideoContentRepository, UserVideoContentPageableRepository userVideoContentPageableRepository, TmdbClient tmdbClient, AniListClient aniListClient, Converter<AniListMediaStatus, VideoContentModel.Status> statusConverter, UserVideoContentListStatusMapper userVideoContentListStatusMapper, VideoContentCategoryMapper categoryMapper, VideoContentFormatMapper formatMapper, UserVideoContentListElementMapper userVideoContentListElementMapper, VideoContentBasicInfoMapper videoContentBasicInfoMapper) {
-        this.userVideoContentRepository = userVideoContentRepository;
-        this.userVideoContentPageableRepository = userVideoContentPageableRepository;
-        this.tmdbClient = tmdbClient;
-        this.aniListClient = aniListClient;
-        this.statusConverter = statusConverter;
-        this.userVideoContentListStatusMapper = userVideoContentListStatusMapper;
-        this.categoryMapper = categoryMapper;
-        this.formatMapper = formatMapper;
-        this.userVideoContentListElementMapper = userVideoContentListElementMapper;
-        this.videoContentBasicInfoMapper = videoContentBasicInfoMapper;
-    }
-
-    public void updateUserVideoContent(UserVideoContent userVideoContent, User user, VideoContent videoContent) throws TooManyAnimeRequestsException {
-        UserVideoContentId userVideoContentId = new UserVideoContentId(user.getId(), videoContent.getId());
-        userVideoContent.setId(userVideoContentId);
-        userVideoContent.setUser(user);
-        userVideoContent.setVideoContent(videoContent);
-
-        Optional<UserVideoContent> dbUserVideoContent = getUserVideoContentById(userVideoContentId);
-        if (dbUserVideoContent.isPresent()) {
-            if (!Objects.equals(userVideoContent.getEpisodes(), dbUserVideoContent.get().getEpisodes())) {//if episode number changed
-                userVideoContent.setStatus(updateStatus(userVideoContent));
-            } else if (userVideoContent.getStatus() != dbUserVideoContent.get().getStatus()) {//if status changed
-                userVideoContent.setEpisodes(updateEpisodes(userVideoContent));
-            }
-        }
-        saveUserVideoContent(userVideoContent);
-    }
+    private final VideoContentService videoContentService;
 
     private Optional<VideoContentModel> getVideoContentModel(VideoContent videoContent) throws TooManyAnimeRequestsException {
         if (videoContent.getCategory() == ANIME) {
@@ -103,34 +78,6 @@ public class UserVideoContentService {
             };
         }
         return Optional.empty();
-    }
-
-    private UserVideoContentStatus updateStatus(UserVideoContent userVideoContent) throws TooManyAnimeRequestsException {
-        Optional<VideoContentModel> optionalVideoContentModel = getVideoContentModel(userVideoContent.getVideoContent());
-        if (optionalVideoContentModel.isPresent()) {
-            VideoContentModel videoContentModel = optionalVideoContentModel.get();
-            if ((userVideoContent.getEpisodes() > 0 || userVideoContent.getStatus() == UserVideoContentStatus.COMPLETE) && userVideoContent.getEpisodes() < videoContentModel.getEpisodes()) {//if less watched episodes as it is make it watching
-                return UserVideoContentStatus.WATCHING;
-            } else if (videoContentModel.getStatus() == VideoContentModel.Status.RELEASED && userVideoContent.getEpisodes() > 0 && userVideoContent.getEpisodes() == videoContentModel.getEpisodes()) {// if it released and all episodes watched then it completed
-                return UserVideoContentStatus.COMPLETE;
-            }
-            return userVideoContent.getStatus();
-        }
-        return userVideoContent.getStatus();
-    }
-
-    private int updateEpisodes(UserVideoContent userVideoContent) throws TooManyAnimeRequestsException {
-        Optional<VideoContentModel> optionalVideoContentModel = getVideoContentModel(userVideoContent.getVideoContent());
-        if (optionalVideoContentModel.isPresent()) {
-            VideoContentModel videoContentModel = optionalVideoContentModel.get();
-            if (userVideoContent.getStatus() == UserVideoContentStatus.COMPLETE) {//if complete then make all episodes watched
-                return videoContentModel.getEpisodes();
-            } else if (userVideoContent.getStatus() == UserVideoContentStatus.PLANNED) {// if planned then 0 episodes watched
-                return 0;
-            }
-            return userVideoContent.getEpisodes();
-        }
-        return userVideoContent.getEpisodes();
     }
 
     private Optional<UserVideoContent> getUserVideoContentById(UserVideoContentId userVideoContentKey) {
@@ -235,5 +182,76 @@ public class UserVideoContentService {
             }
         }
         return bList;
+    }
+
+    public UpdateUserVideoContentListElementPayload updateUserVideoContentListElement(User user, UpdateUserVideoContentListElementInput input) throws TooManyAnimeRequestsException, ContentNotFoundException, JsonProcessingException {
+        UserVideoContent userVideoContent = getOrCreateUserVideoContent(user, input);
+
+        updateScore(userVideoContent, input.score());
+        updateEpisodesAndStatus(userVideoContent, input);
+
+        userVideoContent = saveUserVideoContent(userVideoContent);
+
+        return new UpdateUserVideoContentListElementPayload(userVideoContentListElementMapper.fromEntity(userVideoContent));
+    }
+
+    private UserVideoContent getOrCreateUserVideoContent(User user, UpdateUserVideoContentListElementInput input) throws ContentNotFoundException, TooManyAnimeRequestsException {
+        Optional<UserVideoContent> optionalUserVideoContent = getUserVideoContentByIdInput(user.getId(), input.videoContentIdInput());
+        if (optionalUserVideoContent.isPresent()) {
+            return optionalUserVideoContent.get();
+        } else {
+            VideoContent videoContent = videoContentService.getOrCreateVideoContent(input.videoContentIdInput());
+            UserVideoContentId userVideoContentId = new UserVideoContentId(user.getId(), videoContent.getId());
+            return new UserVideoContent(userVideoContentId, videoContent, 0, (input.score() != null ? input.score() : 0), UserVideoContentStatus.PLANNED, 1, user);
+        }
+    }
+
+    private void updateScore(UserVideoContent userVideoContent, Integer score) {
+        if (scoreCheck(score) != null) {
+            userVideoContent.setScore(score);
+        }
+    }
+
+    private void updateEpisodesAndStatus(UserVideoContent userVideoContent, UpdateUserVideoContentListElementInput input)
+            throws TooManyAnimeRequestsException {
+
+        boolean isEpisodeInputExist = input.episodes() != null;
+        boolean isStatusInputExist = input.status() != null;
+
+        if (isEpisodeInputExist || isStatusInputExist) {
+            Integer watchedEpisodes = isEpisodeInputExist ? input.episodes() : userVideoContent.getEpisodes();
+            UserVideoContentStatus status = isStatusInputExist ? userVideoContentListStatusMapper.toUserVideoContentStatus(input.status()) : userVideoContent.getStatus();
+
+            Optional<VideoContentModel> optionalVideoContentModel = getVideoContentModel(userVideoContent.getVideoContent());
+            if (optionalVideoContentModel.isPresent()) {
+                PairRelationHandler<Integer, UserVideoContentStatus> episodeStatusRelationHandler = new EpisodeStatusRelationHandler(optionalVideoContentModel.get());
+                Pair<Integer, UserVideoContentStatus> pair = episodeStatusRelationHandler.handleRelation(watchedEpisodes, status, (isEpisodeInputExist ? PairRelationHandler.Priority.LEFT : PairRelationHandler.Priority.RIGHT));
+                watchedEpisodes = pair.getLeft();
+                status = pair.getRight();
+            }
+
+            userVideoContent.setEpisodes(watchedEpisodes);
+            userVideoContent.setStatus(status);
+        }
+    }
+
+    public Optional<UserVideoContent> getUserVideoContentByIdInput(int userId, VideoContentIdInput input) {
+        Optional<UserVideoContent> optionalUserVideoContent = Optional.empty();
+        if (input.videoContentId() != null) {
+            optionalUserVideoContent = getUserVideoContentById(userId, input.videoContentId());
+        }
+        if (input.aniListId() != null) {
+            optionalUserVideoContent = optionalUserVideoContent.isEmpty() ? userVideoContentRepository.findById_UserIdAndVideoContent_AniListId(userId, input.aniListId()) : optionalUserVideoContent;
+        }
+        if (input.tmdbIdInput() != null) {
+            optionalUserVideoContent = optionalUserVideoContent.isEmpty() ?
+                    userVideoContentRepository.findById_UserIdAndVideoContent_TmdbIdAndVideoContent_Type(
+                            userId,
+                            input.tmdbIdInput().tmdbId(),
+                            formatMapper.toVideoContentType(input.tmdbIdInput().format())
+                    )
+                    : optionalUserVideoContent;
+        }
+        return optionalUserVideoContent;
     }
 }

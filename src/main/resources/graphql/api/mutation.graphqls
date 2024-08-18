@@ -7,7 +7,7 @@ type Mutation{
     refreshAccessToken: AccessTokenResponse
     "Get new refresh token. Non-expired refresh token needed."
     refreshToken: TokenPayload
-    "Update Element from User Video Content List"
+    "Update Element from User Video Content List. Need a valid access token"
     updateUserVideoContentListElement(input: UpdateUserVideoContentListElementInput): UpdateUserVideoContentListElementPayload
     deleteUserVideoContentListElement(input: DeleteUserVideoContentListElementInput): DeleteUserVideoContentListElementPayload
 }
