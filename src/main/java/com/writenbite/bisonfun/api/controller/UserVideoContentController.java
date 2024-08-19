@@ -1,6 +1,5 @@
 package com.writenbite.bisonfun.api.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.writenbite.bisonfun.api.client.ContentNotFoundException;
 import com.writenbite.bisonfun.api.client.anilist.TooManyAnimeRequestsException;
 import com.writenbite.bisonfun.api.database.entity.User;
@@ -9,8 +8,10 @@ import com.writenbite.bisonfun.api.service.UserService;
 import com.writenbite.bisonfun.api.service.UserVideoContentService;
 import com.writenbite.bisonfun.api.types.Connection;
 import com.writenbite.bisonfun.api.types.uservideocontent.UserVideoContentListElement;
+import com.writenbite.bisonfun.api.types.uservideocontent.input.DeleteUserVideoContentListElementInput;
 import com.writenbite.bisonfun.api.types.uservideocontent.input.UpdateUserVideoContentListElementInput;
 import com.writenbite.bisonfun.api.types.uservideocontent.input.UserVideoContentListInput;
+import com.writenbite.bisonfun.api.types.uservideocontent.output.DeleteUserVideoContentListElementPayload;
 import com.writenbite.bisonfun.api.types.uservideocontent.output.UpdateUserVideoContentListElementPayload;
 import com.writenbite.bisonfun.api.types.videocontent.VideoContent;
 import lombok.extern.slf4j.Slf4j;
@@ -49,12 +50,22 @@ public class UserVideoContentController {
 
     @PreAuthorize("hasRole(T(com.writenbite.bisonfun.api.security.Role).ROLE_ACCESS)")
     @MutationMapping
-    public UpdateUserVideoContentListElementPayload updateUserVideoContentListElement(@Argument final UpdateUserVideoContentListElementInput input, Principal principal) throws UserNotFoundException, ContentNotFoundException, TooManyAnimeRequestsException, JsonProcessingException {
+    public UpdateUserVideoContentListElementPayload updateUserVideoContentListElement(@Argument final UpdateUserVideoContentListElementInput input, Principal principal) throws UserNotFoundException, ContentNotFoundException, TooManyAnimeRequestsException {
         Optional<User> optionalUser = userService.getUserByUsername(principal.getName());
         if (optionalUser.isEmpty()) {
             throw new UserNotFoundException(principal.getName());
         }
         return userVideoContentService.updateUserVideoContentListElement(optionalUser.get(), input);
+    }
+
+    @PreAuthorize("hasRole(T(com.writenbite.bisonfun.api.security.Role).ROLE_ACCESS)")
+    @MutationMapping
+    public DeleteUserVideoContentListElementPayload deleteUserVideoContentListElement(@Argument final DeleteUserVideoContentListElementInput input, Principal principal) throws UserNotFoundException {
+        Optional<User> optionalUser = userService.getUserByUsername(principal.getName());
+        if (optionalUser.isEmpty()) {
+            throw new UserNotFoundException(principal.getName());
+        }
+        return new DeleteUserVideoContentListElementPayload(userVideoContentService.deleteVideoContentFromUserList(optionalUser.get().getId(), input.videoContentIdInput()));
     }
 
     @PreAuthorize("hasRole(T(com.writenbite.bisonfun.api.security.Role).ROLE_ACCESS)")

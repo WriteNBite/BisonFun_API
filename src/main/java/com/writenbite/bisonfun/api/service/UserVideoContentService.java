@@ -97,9 +97,13 @@ public class UserVideoContentService {
         return userVideoContentRepository.save(userVideoContent);
     }
 
-    public void deleteVideoContentFromUserList(UserVideoContentId userVideoContentKey) {
-        log.info("Delete Video Content {} from User {} list", userVideoContentKey.getVideoContentId(), userVideoContentKey.getUserId());
-        userVideoContentRepository.findById(userVideoContentKey).ifPresent(userVideoContentRepository::delete);
+    public boolean deleteVideoContentFromUserList(int userId, VideoContentIdInput input){
+        Optional<UserVideoContent> optionalUserVideoContent = getUserVideoContentByIdInput(userId, input);
+        if(optionalUserVideoContent.isEmpty()){
+            throw new IllegalArgumentException("User " + userId + " have no video content by " + input + " input");
+        }
+        userVideoContentRepository.delete(optionalUserVideoContent.get());
+        return getUserVideoContentByIdInput(userId, input).isEmpty();
     }
 
     public void saveUserList(User user, List<UserVideoContent> videoContentList) {
@@ -184,7 +188,7 @@ public class UserVideoContentService {
         return bList;
     }
 
-    public UpdateUserVideoContentListElementPayload updateUserVideoContentListElement(User user, UpdateUserVideoContentListElementInput input) throws TooManyAnimeRequestsException, ContentNotFoundException, JsonProcessingException {
+    public UpdateUserVideoContentListElementPayload updateUserVideoContentListElement(User user, UpdateUserVideoContentListElementInput input) throws TooManyAnimeRequestsException, ContentNotFoundException {
         UserVideoContent userVideoContent = getOrCreateUserVideoContent(user, input);
 
         updateScore(userVideoContent, input.score());

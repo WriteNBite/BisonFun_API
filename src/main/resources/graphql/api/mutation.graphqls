@@ -9,5 +9,6 @@ type Mutation{
     refreshToken: TokenPayload
     "Update Element from User Video Content List. Need a valid access token"
     updateUserVideoContentListElement(input: UpdateUserVideoContentListElementInput): UpdateUserVideoContentListElementPayload
+    "Delete Element from User Video Content List. Need a valid access token"
     deleteUserVideoContentListElement(input: DeleteUserVideoContentListElementInput): DeleteUserVideoContentListElementPayload
 }

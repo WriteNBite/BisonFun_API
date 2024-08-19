@@ -16,8 +16,7 @@ type DeleteUserVideoContentListElementPayload {
 }
 
 input DeleteUserVideoContentListElementInput {
-    userId: Int!
-    videoContentId: Int!
+    videoContentIdInput: VideoContentIdInput!
 }
 
 type UpdateUserVideoContentListElementPayload {
