@@ -1,7 +1,8 @@
 type Query{
-    #Get User by id
-    user(id: Int!): User
-    userByUsername(username: String!): User
+    "Get User info by id"
+    user(id: Int!): UserPayload
+    "Get User info by username"
+    userByUsername(username: String!): UserPayload
     #Find VideoContent by id and external id
     "Get Video Content by id"
     videoContent(id: Long!): VideoContent @deprecated(reason: "Use videoContentByIdInput")

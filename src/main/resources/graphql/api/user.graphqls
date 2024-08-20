@@ -31,3 +31,8 @@ input RegisterInput{
     "Password of the user"
     password: String!
 }
+
+"User info publicly available"
+type UserPayload{
+    userInfo: User
+}

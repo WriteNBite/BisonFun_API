@@ -1,8 +1,8 @@
 package com.writenbite.bisonfun.api.controller;
 
 import com.writenbite.bisonfun.api.service.UserService;
-import com.writenbite.bisonfun.api.types.user.User;
 import com.writenbite.bisonfun.api.types.mapper.UserMapper;
+import com.writenbite.bisonfun.api.types.user.UserPayload;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
@@ -22,22 +22,22 @@ public class UserController {
     }
 
     @QueryMapping
-    public User user(@Argument int id) {
+    public UserPayload user(@Argument int id) {
         Optional<com.writenbite.bisonfun.api.database.entity.User> optionalUser = userService.getUserById(id);
         if (optionalUser.isEmpty()) {
             return null;
         }
         com.writenbite.bisonfun.api.database.entity.User userDb = optionalUser.get();
-        return userMapper.fromEntity(userDb);
+        return new UserPayload(userMapper.fromEntity(userDb));
     }
 
     @QueryMapping
-    public User userByUsername(@Argument String username) {
+    public UserPayload userByUsername(@Argument String username) {
         Optional<com.writenbite.bisonfun.api.database.entity.User> optionalUser = userService.getUserByUsername(username.toLowerCase());
         if (optionalUser.isEmpty()) {
             return null;
         }
         com.writenbite.bisonfun.api.database.entity.User userDb = optionalUser.get();
-        return userMapper.fromEntity(userDb);
+        return new UserPayload(userMapper.fromEntity(userDb));
     }
 }
