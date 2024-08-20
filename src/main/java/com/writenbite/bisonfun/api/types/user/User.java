@@ -1,4 +1,4 @@
 package com.writenbite.bisonfun.api.types.user;
 
-public record User(int id, String email, String username) {
+public record User(int id, String username) {
 }

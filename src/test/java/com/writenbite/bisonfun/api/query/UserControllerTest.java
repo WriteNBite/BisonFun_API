@@ -42,22 +42,17 @@ public class UserControllerTest {
     public void testUserFoundById() {
         when(userService.getUserById(1)).thenReturn(Optional.of(userDb));
 
-        String query = "query { user(id: 1) { id username email } }";
-
-        graphQlTester.document(query)
+        graphQlTester.documentName("api/user/userTest")
                 .execute()
-                .path("user.id").entity(Integer.class).isEqualTo(userDb.getId())
-                .path("user.username").entity(String.class).isEqualTo(userDb.getUsername())
-                .path("user.email").entity(String.class).isEqualTo(userDb.getEmail());
+                .path("user.userInfo.id").entity(Integer.class).isEqualTo(userDb.getId())
+                .path("user.userInfo.username").entity(String.class).isEqualTo(userDb.getUsername());
     }
 
     @Test
     public void testUserNotFoundById() {
         when(userService.getUserById(1)).thenReturn(Optional.empty());
 
-        String query = "query { user(id: 1) { id username email } }";
-
-        graphQlTester.document(query)
+        graphQlTester.documentName("api/user/userTest")
                 .execute()
                 .path("user").valueIsNull();
     }
@@ -66,22 +61,17 @@ public class UserControllerTest {
     public void testUserFoundByUsername() {
         when(userService.getUserByUsername("testuser")).thenReturn(Optional.of(userDb));
 
-        String query = "query { userByUsername(username: \"testuser\") { id username email } }";
-
-        graphQlTester.document(query)
+        graphQlTester.documentName("api/user/userByUsernameTest")
                 .execute()
-                .path("userByUsername.id").entity(Integer.class).isEqualTo(userDb.getId())
-                .path("userByUsername.username").entity(String.class).isEqualTo(userDb.getUsername())
-                .path("userByUsername.email").entity(String.class).isEqualTo(userDb.getEmail());
+                .path("userByUsername.userInfo.id").entity(Integer.class).isEqualTo(userDb.getId())
+                .path("userByUsername.userInfo.username").entity(String.class).isEqualTo(userDb.getUsername());
     }
 
     @Test
     public void testUserNotFoundByUsername() {
         when(userService.getUserByUsername(anyString())).thenReturn(Optional.empty());
 
-        String query = "query { userByUsername(username: \"testuser\") { id username email } }";
-
-        graphQlTester.document(query)
+        graphQlTester.documentName("api/user/userByUsernameTest")
                 .execute()
                 .path("userByUsername").valueIsNull();
     }

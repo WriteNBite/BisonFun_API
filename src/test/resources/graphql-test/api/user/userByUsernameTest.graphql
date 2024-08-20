@@ -1,0 +1,8 @@
+query {
+    userByUsername(username: "testuser"){
+        userInfo {
+            id
+            username
+        }
+    }
+}

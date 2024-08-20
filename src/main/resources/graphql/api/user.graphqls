@@ -2,8 +2,6 @@
 type User{
     "The id of the user"
     id: Int!
-    "The email of the user"
-    email: String
     "Username of the user"
     username: String
 }
@@ -30,6 +28,13 @@ input RegisterInput{
     email: String!
     "Password of the user"
     password: String!
+}
+
+"Information which is available to authorised user about it's account"
+type AuthorisedUserPayload{
+    userInfo: User
+    "The email of the user"
+    email: String
 }
 
 "User info publicly available"

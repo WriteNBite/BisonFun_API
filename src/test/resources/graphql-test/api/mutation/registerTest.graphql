@@ -1,7 +1,6 @@
 mutation registerTest{
     register(input: {username: "user", password: "pass", email: "testing@test.com"}){
         id
-        email
         username
     }
 }

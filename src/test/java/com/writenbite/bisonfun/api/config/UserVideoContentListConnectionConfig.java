@@ -17,7 +17,7 @@ public class UserVideoContentListConnectionConfig {
     @Bean
     public UserVideoContentListConnection contentListConnection() {
         Random random = new Random();
-        User user = new User(1, "test@test.com", "tester");
+        User user = new User(1, "tester");
         List<UserVideoContentListElement> userList = getMovies().stream()
                 .map(movie -> new UserVideoContentListElement(user, movie, random.nextInt(11), random.nextInt(11), UserVideoContentListStatus.values()[random.nextInt(UserVideoContentListStatus.values().length)]))
                 .toList();

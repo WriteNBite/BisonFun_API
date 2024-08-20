@@ -2,7 +2,6 @@ query userVideoContentTest{
     userVideoContent(userId: 1, contentId: 2){
         user {
             id
-            email
             username
         }
         videoContent {

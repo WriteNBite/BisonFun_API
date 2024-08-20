@@ -3,6 +3,8 @@ type Query{
     user(id: Int!): UserPayload
     "Get User info by username"
     userByUsername(username: String!): UserPayload
+    "Get Authorised User info"
+    authorisedUser: AuthorisedUserPayload
     #Find VideoContent by id and external id
     "Get Video Content by id"
     videoContent(id: Long!): VideoContent @deprecated(reason: "Use videoContentByIdInput")
