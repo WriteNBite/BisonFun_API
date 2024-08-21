@@ -1,5 +1,5 @@
-query userVideoContentTest{
-    userVideoContent(userId: 1, contentId: 2){
+query userVideoContentTest($userId: Int){
+    userVideoContent(userId: $userId, contentId: 2){
         user {
             id
             username

@@ -43,7 +43,17 @@ public class UserVideoContentController {
 
     @QueryMapping
     public Connection<UserVideoContentListElement> userVideoContentList(@Argument final Integer userId, @Argument final UserVideoContentListInput filter, @Argument final Integer page) throws UserNotFoundException {
+        Integer customUserId = resolveUserId(userId);
+        return userVideoContentService.userVideoContentList(customUserId, filter, page);
+    }
 
+    @QueryMapping
+    public UserVideoContentListElement userVideoContent(@Argument final Integer userId, @Argument final long contentId) throws ContentNotFoundException, UserNotFoundException {
+        Integer customUserId = resolveUserId(userId);
+        return userVideoContentService.userVideoContentListElement(customUserId, contentId);
+    }
+
+    private Integer resolveUserId(Integer userId) throws UserNotFoundException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserPrincipal principal = authentication != null ? (UserPrincipal) authentication.getPrincipal() : null;
 
@@ -58,12 +68,7 @@ public class UserVideoContentController {
             }
             customUserId = optionalUser.get().getId();
         }
-        return userVideoContentService.userVideoContentList(customUserId, filter, page);
-    }
-
-    @QueryMapping
-    public UserVideoContentListElement userVideoContent(@Argument final int userId, @Argument final long contentId) throws ContentNotFoundException {
-        return userVideoContentService.userVideoContentListElement(userId, contentId);
+        return customUserId;
     }
 
     @PreAuthorize("hasRole(T(com.writenbite.bisonfun.api.security.Role).ROLE_ACCESS)")

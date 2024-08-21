@@ -80,6 +80,7 @@ public class UserVideoContentControllerTest {
         when(userVideoContentService.userVideoContentListElement(1, 2L)).thenReturn(element);
 
         GraphQlTester.Response response = tester.documentName("api/userVideoContentTest")
+                .variable("userId", 1)
                 .execute();
         response.errors()
                 .verify();
@@ -90,10 +91,22 @@ public class UserVideoContentControllerTest {
     }
 
     @Test
+    public void userVideoContentNoIdOrAuthorisation(){
+        tester.documentName("api/userVideoContentTest")
+                .execute()
+                .errors()
+                .satisfy(errors -> {
+                    assertThat(errors.isEmpty()).isFalse();
+                    assertThat(errors.getFirst().getErrorType().toString()).isEqualTo("BAD_REQUEST");
+                });
+    }
+
+    @Test
     public void userVideoContentNotFound() throws ContentNotFoundException {
         when(userVideoContentService.userVideoContentListElement(1, 2L)).thenThrow(new ContentNotFoundException());
 
         tester.documentName("api/userVideoContentTest")
+                .variable("userId", 1)
                 .execute()
                 .errors()
                 .satisfy(errors -> {

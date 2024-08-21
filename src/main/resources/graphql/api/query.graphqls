@@ -32,9 +32,14 @@ type Query{
         filter: UserVideoContentListFilterInput,
         page: Int = 1
     ): UserVideoContentListConnection
-    "Get Video Content watch information by User and video content id"
+    """
+    Get Video Content watch information by User and video content id
+
+    If a user is authenticated through JWT, this method can be used without providing a userId.
+    In this case, the userId will be extracted from the JWT token.
+    """
     userVideoContent(
-        userId: Int!
+        userId: Int
         contentId: Long!
     ): UserVideoContentListElement
 

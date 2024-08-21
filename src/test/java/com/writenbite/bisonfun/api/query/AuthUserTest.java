@@ -1,5 +1,6 @@
 package com.writenbite.bisonfun.api.query;
 
+import com.writenbite.bisonfun.api.client.ContentNotFoundException;
 import com.writenbite.bisonfun.api.database.entity.User;
 import com.writenbite.bisonfun.api.security.TokenType;
 import com.writenbite.bisonfun.api.service.JwtService;
@@ -26,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest
+@SpringBootTest(properties = {"bisonfun.rate-limit.requests-per-second=4"})
 @AutoConfigureHttpGraphQlTester
 public class AuthUserTest {
 
@@ -106,5 +107,29 @@ public class AuthUserTest {
                 .get();
         assertIterableEquals(userVideoContentListConnection.nodes(), userVideoContentList);
         assertEquals(userVideoContentListConnection.pageInfo(), pageInfo);
+    }
+
+    @Test
+    public void authUserVideoContentFound() throws ContentNotFoundException {
+        UserVideoContentListElement element = userVideoContentListConnection.nodes()
+                .stream()
+                .filter(listElement -> listElement.user().id() == 1 && listElement.videoContent().id() == 2L)
+                .findFirst()
+                .orElse(null);
+        when(userVideoContentService.userVideoContentListElement(33, 2L)).thenReturn(element);
+        when(userService.getUserByUsername("Tester")).thenReturn(Optional.of(user));
+
+        String accessToken = jwtService.generateToken("Tester", 3000, TokenType.ACCESS);
+        GraphQlTester.Response response = tester.mutate()
+                .header("Authorization", "Bearer " + accessToken)
+                .build()
+                .documentName("api/userVideoContentTest")
+                .execute();
+        response.errors()
+                .verify();
+        UserVideoContentListElement actualElement = response.path("userVideoContent")
+                .entity(UserVideoContentListElement.class)
+                .get();
+        assertEquals(element, actualElement);
     }
 }
