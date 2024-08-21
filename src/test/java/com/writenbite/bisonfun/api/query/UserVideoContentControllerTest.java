@@ -43,6 +43,7 @@ public class UserVideoContentControllerTest {
                 .thenReturn(userVideoContentListConnection);
 
         GraphQlTester.Response response = tester.documentName("api/userVideoContentListTest")
+                .variable("userId", 1)
                 .execute();
         response.errors()
                 .verify();
@@ -56,6 +57,17 @@ public class UserVideoContentControllerTest {
                 .get();
         assertIterableEquals(userVideoContentListConnection.nodes(), userVideoContentList);
         assertEquals(userVideoContentListConnection.pageInfo(), pageInfo);
+    }
+
+    @Test
+    public void userVideoContentListNoIdOrAuthorisation(){
+        tester.documentName("api/userVideoContentListTest")
+                .execute()
+                .errors()
+                .satisfy(errors -> {
+                    assertThat(errors.isEmpty()).isFalse();
+                    assertThat(errors.getFirst().getErrorType().toString()).isEqualTo("BAD_REQUEST");
+                });
     }
 
     @Test

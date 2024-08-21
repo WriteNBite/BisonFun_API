@@ -21,9 +21,14 @@ type Query{
     "Get Trending Video Content."
     trendVideoContent: TrendVideoContentResponse
 
-    "Get User's Video Content List by category of content and status of consuming list"
+    """
+    Get User's Video Content List by category of content and status of consuming list.
+
+    If a user is authenticated through JWT, this method can be used without providing a userId.
+    In this case, the userId will be extracted from the JWT token.
+    """
     userVideoContentList(
-        userId: Int!
+        userId: Int
         filter: UserVideoContentListFilterInput,
         page: Int = 1
     ): UserVideoContentListConnection

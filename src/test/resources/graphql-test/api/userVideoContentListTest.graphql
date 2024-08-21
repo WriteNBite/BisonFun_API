@@ -1,5 +1,5 @@
-query userVideoContentListTest{
-    userVideoContentList(userId: 1){
+query userVideoContentListTest($userId: Int){
+    userVideoContentList(userId: $userId){
         pageInfo {
             total
             perPage

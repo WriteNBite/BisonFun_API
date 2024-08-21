@@ -4,6 +4,7 @@ import com.writenbite.bisonfun.api.client.ContentNotFoundException;
 import com.writenbite.bisonfun.api.client.anilist.TooManyAnimeRequestsException;
 import com.writenbite.bisonfun.api.database.entity.User;
 import com.writenbite.bisonfun.api.security.UserNotFoundException;
+import com.writenbite.bisonfun.api.security.UserPrincipal;
 import com.writenbite.bisonfun.api.service.UserService;
 import com.writenbite.bisonfun.api.service.UserVideoContentService;
 import com.writenbite.bisonfun.api.types.Connection;
@@ -20,6 +21,8 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
@@ -39,8 +42,23 @@ public class UserVideoContentController {
     }
 
     @QueryMapping
-    public Connection<UserVideoContentListElement> userVideoContentList(@Argument final int userId, @Argument final UserVideoContentListInput filter, @Argument final Integer page) {
-        return userVideoContentService.userVideoContentList(userId, filter, page);
+    public Connection<UserVideoContentListElement> userVideoContentList(@Argument final Integer userId, @Argument final UserVideoContentListInput filter, @Argument final Integer page) throws UserNotFoundException {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserPrincipal principal = authentication != null ? (UserPrincipal) authentication.getPrincipal() : null;
+
+        Integer customUserId = userId;
+        if(customUserId == null){
+            if(principal == null){
+                throw new IllegalArgumentException("User is not authorised and userId is null");
+            }
+            Optional<User> optionalUser = userService.getUserByUsername(principal.getUsername());
+            if(optionalUser.isEmpty()){
+                throw new UserNotFoundException(principal.getUsername());
+            }
+            customUserId = optionalUser.get().getId();
+        }
+        return userVideoContentService.userVideoContentList(customUserId, filter, page);
     }
 
     @QueryMapping
