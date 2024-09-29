@@ -1,9 +1,9 @@
 {
   "properties": [
     {
-      "name": "bisonfun.tmdb.key",
+      "name": "bisonfun.tmdb.read-access-key",
       "type": "java.lang.String",
-      "description": "Key for TMDB API."
+      "description": "Read Access API key for TheMovieDB."
     },
     {
       "name": "bisonfun.jwt.secret",

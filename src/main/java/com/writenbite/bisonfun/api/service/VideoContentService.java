@@ -95,12 +95,7 @@ public class VideoContentService {
             case MAINSTREAM -> {
                 if (formats.contains(VideoContentFormat.MOVIE)) {
                     MovieResultsPage movies;
-                    try {
-                        movies = tmdbClient.parseMovieList(query, page);
-                    } catch (JsonProcessingException e) {
-                        log.error(e.getMessage());
-                        throw new ContentNotFoundException();
-                    }
+                    movies = tmdbClient.parseMovieList(query, page);
                     totalPages = Math.max(totalPages, movies.getTotalPages());
                     totalResults += movies.getTotalResults();
 
@@ -112,12 +107,7 @@ public class VideoContentService {
                 }
                 if (formats.contains(VideoContentFormat.TV)) {
                     TvSeriesResultsPage tvs;
-                    try {
-                        tvs = tmdbClient.parseTVList(query, page);
-                    } catch (JsonProcessingException e) {
-                        log.error(e.getMessage());
-                        throw new ContentNotFoundException();
-                    }
+                    tvs = tmdbClient.parseTVList(query, page);
                     totalPages = Math.max(totalPages, tvs.getTotalPages());
                     totalResults += tvs.getTotalResults();
 
@@ -193,12 +183,8 @@ public class VideoContentService {
                 } catch (ContentNotFoundException | TooManyAnimeRequestsException e) {
                     log.error(e.getMessage());
                 }
-                try {
-                    movieDb = videoContentDb.getType() == MOVIE ? tmdbClient.parseMovieById(videoContentDb.getTmdbId()) : null;
-                    tvSeriesDb = videoContentDb.getType() == TV ? tmdbClient.parseShowById(videoContentDb.getTmdbId()) : null;
-                } catch (JsonProcessingException e) {
-                    log.error(e.getMessage());
-                }
+                movieDb = videoContentDb.getType() == MOVIE ? tmdbClient.parseMovieById(videoContentDb.getTmdbId()) : null;
+                tvSeriesDb = videoContentDb.getType() == TV ? tmdbClient.parseShowById(videoContentDb.getTmdbId()) : null;
                 basicInfo = basicInfoMapper.fromModels(videoContentDb, anime, movieDb, tvSeriesDb);
                 if (anime != null || movieDb != null || tvSeriesDb != null) {
                     externalInfo = anime != null ? externalInfoMapper.fromAniListMedia(anime) : (movieDb != null ? externalInfoMapper.fromMovieDb(movieDb) : externalInfoMapper.fromTvSeriesDb(tvSeriesDb));
@@ -235,12 +221,8 @@ public class VideoContentService {
             MovieDb movieDb = null;
             TvSeriesDb tvSeriesDb = null;
             if (optionalVideoContent.isPresent()) {
-                try {
-                    movieDb = videoContentDb.getType() == MOVIE ? tmdbClient.parseMovieById(videoContentDb.getTmdbId()) : null;
-                    tvSeriesDb = videoContentDb.getType() == TV ? tmdbClient.parseShowById(videoContentDb.getTmdbId()) : null;
-                } catch (JsonProcessingException e) {
-                    log.error(e.getMessage());
-                }
+                movieDb = videoContentDb.getType() == MOVIE ? tmdbClient.parseMovieById(videoContentDb.getTmdbId()) : null;
+                tvSeriesDb = videoContentDb.getType() == TV ? tmdbClient.parseShowById(videoContentDb.getTmdbId()) : null;
             }
             AniListMedia anime = null;
             try {
@@ -302,22 +284,14 @@ public class VideoContentService {
             TvSeriesDb tvSeriesDb = null;
             List<Keyword> keywordResults = new ArrayList<>();
             String title = "";
-            try {
-                if (type == MOVIE) {
-                    movieDb = tmdbClient.parseMovieById(tmdbId);
-                    keywordResults = movieDb.getKeywords().getKeywords();
-                    title = movieDb.getTitle();
-                } else if (type == TV) {
-                    tvSeriesDb = tmdbClient.parseShowById(tmdbId);
-                    keywordResults = tvSeriesDb.getKeywords().getResults();
-                    title = tvSeriesDb.getName();
-                }
-            } catch (JsonProcessingException e) {
-                log.error(e.getMessage());
-                if (videoContentDb == null) {
-                    throw new ContentNotFoundException();
-                }
-                exception = e;
+            if (type == MOVIE) {
+                movieDb = tmdbClient.parseMovieById(tmdbId);
+                keywordResults = movieDb.getKeywords().getKeywords();
+                title = movieDb.getTitle();
+            } else if (type == TV) {
+                tvSeriesDb = tmdbClient.parseShowById(tmdbId);
+                keywordResults = tvSeriesDb.getKeywords().getResults();
+                title = tvSeriesDb.getName();
             }
             if (videoContentDb != null && videoContentDb.getAniListId() != null) {
                 try {
@@ -765,17 +739,13 @@ public class VideoContentService {
      * @param tmdbIdInput record class which contains id of themoviedb and type of content
      * @return tmdb content pair of movie and tv series
      */
-    private Pair<MovieDb, TvSeriesDb> fetchTmdbContent(TmdbIdInput tmdbIdInput){
+    private Pair<MovieDb, TvSeriesDb> fetchTmdbContent(TmdbIdInput tmdbIdInput) throws ContentNotFoundException {
         MovieDb movie = null;
         TvSeriesDb tv = null;
-        try{
-            if(tmdbIdInput.format() == VideoContentFormat.MOVIE){
-                movie = tmdbClient.parseMovieById(tmdbIdInput.tmdbId());
-            } else if (tmdbIdInput.format() == VideoContentFormat.TV) {
-                tv = tmdbClient.parseShowById(tmdbIdInput.tmdbId());
-            }
-        } catch (JsonProcessingException e) {
-            log.error(e.getMessage());
+        if(tmdbIdInput.format() == VideoContentFormat.MOVIE){
+            movie = tmdbClient.parseMovieById(tmdbIdInput.tmdbId());
+        } else if (tmdbIdInput.format() == VideoContentFormat.TV) {
+            tv = tmdbClient.parseShowById(tmdbIdInput.tmdbId());
         }
         return Pair.of(movie, tv);
     }
@@ -1037,7 +1007,7 @@ public class VideoContentService {
         MovieResultsPage movieTrends = null;
         try {
             movieTrends = tmdbClient.parseMovieTrends();
-        } catch (NoAccessException | JsonProcessingException e) {
+        } catch (NoAccessException e) {
             log.error(e.getMessage());
             throw new ContentNotFoundException();
         }
@@ -1052,7 +1022,7 @@ public class VideoContentService {
         TvSeriesResultsPage tvTrends;
         try {
             tvTrends = tmdbClient.parseTVTrends();
-        } catch (NoAccessException | JsonProcessingException e) {
+        } catch (NoAccessException e) {
             log.error(e.getMessage());
             throw new ContentNotFoundException();
         }

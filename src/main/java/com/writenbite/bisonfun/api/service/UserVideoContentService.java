@@ -1,13 +1,11 @@
 package com.writenbite.bisonfun.api.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.writenbite.bisonfun.api.client.*;
 import com.writenbite.bisonfun.api.client.anilist.AniListClient;
 import com.writenbite.bisonfun.api.client.anilist.TooManyAnimeRequestsException;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaStatus;
 import com.writenbite.bisonfun.api.client.tmdb.TmdbClient;
 import com.writenbite.bisonfun.api.database.entity.*;
-import com.writenbite.bisonfun.api.database.entity.User;
 import com.writenbite.bisonfun.api.database.mapper.VideoContentCategoryMapper;
 import com.writenbite.bisonfun.api.database.repository.UserVideoContentPageableRepository;
 import com.writenbite.bisonfun.api.database.repository.UserVideoContentRepository;
@@ -63,14 +61,14 @@ public class UserVideoContentService {
                 case TV, MUSIC, SPECIAL -> {
                     try {
                         yield Optional.of(new TmdbTvSeriesVideoContentModel(tmdbClient.parseShowById(videoContent.getTmdbId())));
-                    } catch (JsonProcessingException e) {
+                    } catch (ContentNotFoundException e) {
                         yield Optional.empty();
                     }
                 }
                 case MOVIE -> {
                     try {
                         yield Optional.of(new TmdbMovieVideoContentModel(tmdbClient.parseMovieById(videoContent.getTmdbId())));
-                    } catch (JsonProcessingException e) {
+                    } catch (ContentNotFoundException e) {
                         yield Optional.empty();
                     }
                 }

@@ -1,6 +1,5 @@
 package com.writenbite.bisonfun.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.writenbite.bisonfun.api.client.ContentNotFoundException;
 import com.writenbite.bisonfun.api.client.NoAccessException;
 import com.writenbite.bisonfun.api.client.anilist.AniListApiResponse;
@@ -9,17 +8,28 @@ import com.writenbite.bisonfun.api.client.anilist.TooManyAnimeRequestsException;
 import com.writenbite.bisonfun.api.client.anilist.types.AniListPage;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMedia;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaPage;
-import com.writenbite.bisonfun.api.client.tmdb.TmdbApiResponse;
 import com.writenbite.bisonfun.api.client.tmdb.TmdbClient;
+import com.writenbite.bisonfun.api.config.ModelConfig;
+import info.movito.themoviedbapi.TmdbApi;
+import info.movito.themoviedbapi.TmdbMovies;
+import info.movito.themoviedbapi.TmdbTrending;
+import info.movito.themoviedbapi.TmdbTvSeries;
 import info.movito.themoviedbapi.model.core.MovieResultsPage;
 import info.movito.themoviedbapi.model.core.TvSeriesResultsPage;
 import info.movito.themoviedbapi.model.movies.MovieDb;
 import info.movito.themoviedbapi.model.tv.series.TvSeriesDb;
+import info.movito.themoviedbapi.tools.TmdbException;
+import info.movito.themoviedbapi.tools.appendtoresponse.MovieAppendToResponse;
+import info.movito.themoviedbapi.tools.appendtoresponse.TvSeriesAppendToResponse;
+import info.movito.themoviedbapi.tools.model.time.TimeWindow;
 import kong.unirest.core.json.JSONObject;
+import org.instancio.Instancio;
+import org.instancio.Model;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -44,7 +54,7 @@ public class RedisCacheTest {
     @MockBean
     private AniListApiResponse aniListApiResponse;
     @MockBean
-    private TmdbApiResponse tmdbApiResponse;
+    private TmdbApi tmdbApi;
 
     @Autowired
     private AniListClient aniListClient;
@@ -52,22 +62,25 @@ public class RedisCacheTest {
     private TmdbClient tmdbClient;
     @Autowired
     private CacheManager cacheManager;
+    @Autowired
+    private Model<MovieDb> movieDbModel;
+    @Autowired
+    private Model<TvSeriesDb> tvSeriesDbModel;
 
-    private String oppenheimer;
+    @Mock
+    private TmdbTrending tmdbTrending;
+    @Mock
+    private TmdbMovies tmdbMovies;
+    @Mock
+    private TmdbTvSeries tmdbTvSeries;
+
     private String konosuba;
-    private String demonSlayer;
     private String animeTrends;
-    private String movieTrends;
-    private String tvTrends;
 
     @BeforeEach
     public void setUp() throws IOException {
-        oppenheimer = readResourceFile("oppenheimer.json");
         konosuba = readResourceFile("konosuba_3.json");
-        demonSlayer = readResourceFile("demon_slayer.json");
         animeTrends = readResourceFile("animeTrends.json");
-        movieTrends = readResourceFile("trends_movie.json");
-        tvTrends = readResourceFile("trends_show.json");
 
         clearAllCaches();
     }
@@ -91,28 +104,32 @@ public class RedisCacheTest {
     }
 
     @Test
-    public void givenRedisCaching_whenMovieTrends_thenMovieTrendsReturnedFromCache() throws NoAccessException, JsonProcessingException {
-        when(tmdbApiResponse.getMovieTrends()).thenReturn(new JSONObject(movieTrends));
+    public void givenRedisCaching_whenMovieTrends_thenMovieTrendsReturnedFromCache() throws TmdbException, NoAccessException {
+        MovieResultsPage movieTrends = ModelConfig.ofTmdbApi(MovieResultsPage.class).create();
+        when(tmdbApi.getTrending()).thenReturn(tmdbTrending);
+        when(tmdbTrending.getMovies(TimeWindow.WEEK, null)).thenReturn(movieTrends);
 
         MovieResultsPage trendsNotCached = tmdbClient.parseMovieTrends();
         MovieResultsPage cachedTrends = tmdbClient.parseMovieTrends();
 
         assertThat(trendsNotCached).isEqualTo(cachedTrends);
-        verify(tmdbApiResponse, times(1)).getMovieTrends();
+        verify(tmdbApi, times(1)).getTrending();
         MovieResultsPage movieTrendsFromCache = cacheManager.getCache("movieTrends").get(SimpleKey.EMPTY, MovieResultsPage.class);
         assertThat(movieTrendsFromCache).isNotNull();
         assertThat(movieTrendsFromCache).isEqualTo(cachedTrends);
     }
 
     @Test
-    public void givenRedisCaching_whenTvTrends_thenTvTrendsReturnedFromCache() throws NoAccessException, JsonProcessingException {
-        when(tmdbApiResponse.getTvTrends()).thenReturn(new JSONObject(tvTrends));
+    public void givenRedisCaching_whenTvTrends_thenTvTrendsReturnedFromCache() throws TmdbException, NoAccessException {
+        TvSeriesResultsPage tvTrends = ModelConfig.ofTmdbApi(TvSeriesResultsPage.class).create();
+        when(tmdbApi.getTrending()).thenReturn(tmdbTrending);
+        when(tmdbTrending.getTv(TimeWindow.WEEK, null)).thenReturn(tvTrends);
 
         TvSeriesResultsPage trendsNotCached = tmdbClient.parseTVTrends();
         TvSeriesResultsPage cachedTrends = tmdbClient.parseTVTrends();
 
         assertThat(trendsNotCached).isEqualTo(cachedTrends);
-        verify(tmdbApiResponse, times(1)).getTvTrends();
+        verify(tmdbApi, times(1)).getTrending();
         TvSeriesResultsPage tvTrendsFromCache = cacheManager.getCache("tvTrends").get(SimpleKey.EMPTY, TvSeriesResultsPage.class);
         assertThat(tvTrendsFromCache).isNotNull();
         assertThat(tvTrendsFromCache).isEqualTo(cachedTrends);
@@ -135,30 +152,34 @@ public class RedisCacheTest {
     }
 
     @Test
-    public void givenRedisCaching_whenFindMovieById_thenMovieReturnedFromCache() throws JsonProcessingException {
+    public void givenRedisCaching_whenFindMovieById_thenMovieReturnedFromCache() throws TmdbException, ContentNotFoundException {
         final int MOVIE_ID = 872585;
-        when(tmdbApiResponse.getMovieById(MOVIE_ID)).thenReturn(new JSONObject(oppenheimer));
+        MovieDb movieDb = Instancio.of(movieDbModel).create();
+        when(tmdbApi.getMovies()).thenReturn(tmdbMovies);
+        when(tmdbMovies.getDetails(MOVIE_ID, null, MovieAppendToResponse.ALTERNATIVE_TITLES, MovieAppendToResponse.RECOMMENDATIONS, MovieAppendToResponse.KEYWORDS)).thenReturn(movieDb);
 
         MovieDb movieNotCached = tmdbClient.parseMovieById(MOVIE_ID);
         MovieDb cachedMovie = tmdbClient.parseMovieById(MOVIE_ID);
 
         assertThat(movieNotCached).isEqualTo(cachedMovie);
-        verify(tmdbApiResponse, times(1)).getMovieById(MOVIE_ID);
+        verify(tmdbApi, times(1)).getMovies();
         Optional<MovieDb> movieFromCache = getCachedJSONObject("jsonMovie", MOVIE_ID, MovieDb.class);
         assertThat(movieFromCache).isPresent();
         assertThat(movieFromCache.get()).isEqualTo(cachedMovie);
     }
 
     @Test
-    public void givenRedisCaching_whenFindShowById_thenShowReturnedFromCache() throws JsonProcessingException {
+    public void givenRedisCaching_whenFindShowById_thenShowReturnedFromCache() throws TmdbException, ContentNotFoundException {
         final int TV_ID = 85937;
-        when(tmdbApiResponse.getShowById(TV_ID)).thenReturn(new JSONObject(demonSlayer));
+        TvSeriesDb tvSeriesDb = Instancio.of(tvSeriesDbModel).create();
+        when(tmdbApi.getTvSeries()).thenReturn(tmdbTvSeries);
+        when(tmdbTvSeries.getDetails(TV_ID, null, TvSeriesAppendToResponse.ALTERNATIVE_TITLES, TvSeriesAppendToResponse.EXTERNAL_IDS, TvSeriesAppendToResponse.KEYWORDS, TvSeriesAppendToResponse.RECOMMENDATIONS)).thenReturn(tvSeriesDb);
 
         TvSeriesDb tvNotCached = tmdbClient.parseShowById(TV_ID);
         TvSeriesDb cachedTv = tmdbClient.parseShowById(TV_ID);
 
         assertThat(tvNotCached).isEqualTo(cachedTv);
-        verify(tmdbApiResponse, times(1)).getShowById(TV_ID);
+        verify(tmdbApi, times(1)).getTvSeries();
         Optional<TvSeriesDb> tvFromCache = getCachedJSONObject("jsonShow", TV_ID, TvSeriesDb.class);
         assertThat(tvFromCache).isPresent();
         assertThat(tvFromCache.get()).isEqualTo(cachedTv);

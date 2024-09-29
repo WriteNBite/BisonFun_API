@@ -2,13 +2,19 @@ package com.writenbite.bisonfun.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.writenbite.bisonfun.api.client.anilist.AniListApiResponse;
-import com.writenbite.bisonfun.api.client.tmdb.TmdbApiResponse;
+import com.writenbite.bisonfun.api.config.ModelConfig;
+import info.movito.themoviedbapi.TmdbApi;
+import info.movito.themoviedbapi.TmdbTrending;
+import info.movito.themoviedbapi.model.core.MovieResultsPage;
+import info.movito.themoviedbapi.model.core.TvSeriesResultsPage;
+import info.movito.themoviedbapi.tools.model.time.TimeWindow;
 import kong.unirest.core.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.graphql.tester.AutoConfigureHttpGraphQlTester;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,23 +50,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureHttpGraphQlTester
 public class RateLimitingTest {
     @MockBean
-    private TmdbApiResponse tmdbApiResponse;
-    @MockBean
     private AniListApiResponse aniListApiResponse;
+    @MockBean
+    private TmdbApi tmdbApi;
     @Autowired
     private CacheManager cacheManager;
     @Autowired
     private MockMvc mockMvc;
 
-    private String movieTrends;
-    private String tvTrends;
+    @Mock
+    private TmdbTrending tmdbTrending;
+
     private String animeTrends;
     private String trendsRequest;
 
     @BeforeEach
     public void setUp() throws IOException {
-        movieTrends = readResourceFile("trends_movie.json");
-        tvTrends = readResourceFile("trends_show.json");
         animeTrends = readResourceFile("animeTrends.json");
 
         trendsRequest = readResourceFile("graphql-test/api/trendingTest.graphql");
@@ -84,8 +89,11 @@ public class RateLimitingTest {
 
     @Test
     public void givenRedisCaching_whenMovieTrendsReachedMaximumLimitPerMinute_thenMovieTrendsReturnTooManyRequestsError() throws Exception {
-        when(tmdbApiResponse.getMovieTrends()).thenReturn(new JSONObject(movieTrends));
-        when(tmdbApiResponse.getTvTrends()).thenReturn(new JSONObject(tvTrends));
+        MovieResultsPage movieTrends = ModelConfig.ofTmdbApi(MovieResultsPage.class).create();
+        TvSeriesResultsPage tvTrends = ModelConfig.ofTmdbApi(TvSeriesResultsPage.class).create();
+        when(tmdbApi.getTrending()).thenReturn(tmdbTrending);
+        when(tmdbTrending.getMovies(TimeWindow.WEEK, null)).thenReturn(movieTrends);
+        when(tmdbTrending.getTv(TimeWindow.WEEK, null)).thenReturn(tvTrends);
         when(aniListApiResponse.getAnimeTrends()).thenReturn(new JSONObject(animeTrends));
 
         Map<String, String> requestBodyMap = new HashMap<>();
