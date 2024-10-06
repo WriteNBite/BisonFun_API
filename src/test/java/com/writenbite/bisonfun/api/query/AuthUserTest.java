@@ -2,6 +2,7 @@ package com.writenbite.bisonfun.api.query;
 
 import com.writenbite.bisonfun.api.client.ContentNotFoundException;
 import com.writenbite.bisonfun.api.database.entity.User;
+import com.writenbite.bisonfun.api.database.repository.UserRepository;
 import com.writenbite.bisonfun.api.security.TokenType;
 import com.writenbite.bisonfun.api.service.JwtService;
 import com.writenbite.bisonfun.api.service.UserService;
@@ -42,6 +43,8 @@ public class AuthUserTest {
     private UserVideoContentService userVideoContentService;
     @Autowired
     private UserVideoContentListConnection userVideoContentListConnection;
+    @MockBean
+    private UserRepository userRepository;
 
     @BeforeEach
     public void setUp() {
@@ -55,6 +58,7 @@ public class AuthUserTest {
     @Test
     public void authUserSuccess(){
         when(userService.getUserByUsername("Tester")).thenReturn(Optional.of(user));
+        when(userRepository.getByUsername("Tester")).thenReturn(Optional.of(user));
         String accessToken = jwtService.generateToken("Tester", 3000, TokenType.ACCESS);
         tester.mutate()
                 .header("Authorization", "Bearer " + accessToken)
@@ -71,6 +75,7 @@ public class AuthUserTest {
     @Test
     public void authUserNotExist(){
         when(userService.getUserByUsername("Tester")).thenReturn(Optional.empty());
+        when(userRepository.getByUsername("Tester")).thenReturn(Optional.empty());
         String accessToken = jwtService.generateToken("Tester", 3000, TokenType.ACCESS);
         tester.mutate()
                 .header("Authorization", "Bearer " + accessToken)
@@ -89,6 +94,7 @@ public class AuthUserTest {
         when(userVideoContentService.userVideoContentList(eq(33), isNull(), any()))
                 .thenReturn(userVideoContentListConnection);
         when(userService.getUserByUsername("Tester")).thenReturn(Optional.of(user));
+        when(userRepository.getByUsername("Tester")).thenReturn(Optional.of(user));
         String accessToken = jwtService.generateToken("Tester", 3000, TokenType.ACCESS);
         GraphQlTester.Response response = tester.mutate()
                 .header("Authorization", "Bearer " + accessToken)
@@ -118,6 +124,7 @@ public class AuthUserTest {
                 .orElse(null);
         when(userVideoContentService.userVideoContentListElement(33, 2L)).thenReturn(element);
         when(userService.getUserByUsername("Tester")).thenReturn(Optional.of(user));
+        when(userRepository.getByUsername("Tester")).thenReturn(Optional.of(user));
 
         String accessToken = jwtService.generateToken("Tester", 3000, TokenType.ACCESS);
         GraphQlTester.Response response = tester.mutate()

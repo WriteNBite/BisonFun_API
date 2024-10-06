@@ -15,6 +15,7 @@ import org.springframework.graphql.execution.ErrorType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -71,7 +72,22 @@ public class JwtFilter extends OncePerRequestFilter {
         // If username is extracted and there is no authentication in the current SecurityContext and the token with proper type
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             // Loading UserDetails by username extracted from the token
-            UserDetails userDetails = userDetailsService.loadUserByUsernameAndGrantTokenAuthority(username, tokenHolder.extractTokenType());
+            UserDetails userDetails;
+            try {
+                 userDetails = userDetailsService.loadUserByUsernameAndGrantTokenAuthority(username, tokenHolder.extractTokenType());
+            }catch (UsernameNotFoundException e){
+                log.warn(e.getMessage());
+                response.setContentType("application/json");
+                response.setStatus(HttpServletResponse.SC_OK);
+                GraphQLError error = GraphqlErrorBuilder.newError()
+                        .message(e.getMessage())
+                        .errorType(ErrorType.NOT_FOUND)
+                        .build();
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("errors", List.of(GraphqlErrorHelper.toSpecification(error)));
+                objectMapper.writeValue(response.getWriter(), errorResponse);
+                return;
+            }
 
             // Validation the token with loaded UserDetails
             if (tokenHolder.validate(userDetails, authorityMapper)) {
