@@ -16,6 +16,7 @@ A brave new version of [BisonFun](https://bisonfun.click) is now as GraphQL API!
 To run this project, you will need to add the following environment variables:
 
 - `MYSQL_USER` & `MYSQL_PASS` - Username and password for the MySQL database.
+- `REDIS_PASS` - Password for the Redis database.
 - `TMDB_KEY` - Read-access key from TheMovieDatabase [API](https://www.themoviedb.org/settings/api).
 - `JWT_SECRET` - A secret key for generating [JWT](https://jwt.io/introduction).
 
