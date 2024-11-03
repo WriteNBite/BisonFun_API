@@ -763,9 +763,15 @@ public class VideoContentService {
         try {
             VideoContentType videoContentType = videoContentTypeMapper.fromAniListMediaFormat(anime.format());
             if (videoContentType == MOVIE) {
-                movie = tmdbClient.parseTmdbMovieByName(anime.title().english(), anime.startDate().year());
+                movie = tmdbClient.parseTmdbMovieByName(
+                        basicInfoMapper.animeEnglishTitle(anime.title()),
+                        anime.startDate() != null ? anime.startDate().year() : null
+                );
             } else if (videoContentType == TV) {
-                tv = tmdbClient.parseTmdbTvByName(anime.title().english(), anime.startDate().year());
+                tv = tmdbClient.parseTmdbTvByName(
+                        basicInfoMapper.animeEnglishTitle(anime.title()),
+                        anime.startDate() != null ? anime.startDate().year() : null
+                );
             }
         } catch (JsonProcessingException | ContentNotFoundException e) {
             log.error(e.getMessage());

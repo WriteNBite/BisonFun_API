@@ -79,7 +79,7 @@ public class TmdbClient {
             throw new RuntimeException(e);
         }
     }
-    public MovieDb parseTmdbMovieByName(String name, int year) throws JsonProcessingException, ContentNotFoundException {
+    public MovieDb parseTmdbMovieByName(String name, Integer year) throws JsonProcessingException, ContentNotFoundException {
         TmdbSearch search = tmdbApi.getSearch();
         MovieResultsPage searchResult;
         try {
@@ -95,7 +95,7 @@ public class TmdbClient {
 
         return movieDbMapper.fromMovie(movies.getFirst());
     }
-    public TvSeriesDb parseTmdbTvByName(String name, int year) throws ContentNotFoundException, JsonProcessingException {
+    public TvSeriesDb parseTmdbTvByName(String name, Integer year) throws ContentNotFoundException, JsonProcessingException {
         TmdbSearch search = tmdbApi.getSearch();
         TvSeriesResultsPage searchResult;
         try {
