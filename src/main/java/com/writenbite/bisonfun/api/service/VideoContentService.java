@@ -13,6 +13,7 @@ import com.writenbite.bisonfun.api.database.entity.UserVideoContent;
 import com.writenbite.bisonfun.api.database.entity.VideoContent;
 import com.writenbite.bisonfun.api.database.entity.VideoContentCategory;
 import com.writenbite.bisonfun.api.database.entity.VideoContentType;
+import com.writenbite.bisonfun.api.database.mapper.VideoContentTypeMapper;
 import com.writenbite.bisonfun.api.database.repository.VideoContentRepository;
 import com.writenbite.bisonfun.api.database.mapper.VideoContentMapper;
 import com.writenbite.bisonfun.api.types.videocontent.input.TmdbIdInput;
@@ -64,11 +65,12 @@ public class VideoContentService {
     private final VideoContentMapper videoContentMapper;
     private final VideoContentBasicInfoMapper basicInfoMapper;
     private final VideoContentExternalInfoMapper externalInfoMapper;
+    private final VideoContentTypeMapper videoContentTypeMapper;
 
     @Autowired
     public VideoContentService(VideoContentRepository videoContentRepository, TmdbClient tmdbClient, AniListClient aniListClient, VideoContentMapper videoContentMapper, VideoContentBasicInfoMapper basicInfoMapper, VideoContentExternalInfoMapper externalInfoMapper,
                                VideoContentFormatMapper videoContentFormatMapper,
-                               VideoContentCompilationMapper videoContentCompilationMapper) {
+                               VideoContentCompilationMapper videoContentCompilationMapper, VideoContentTypeMapper videoContentTypeMapper) {
         this.videoContentRepository = videoContentRepository;
         this.tmdbClient = tmdbClient;
         this.aniListClient = aniListClient;
@@ -77,6 +79,7 @@ public class VideoContentService {
         this.externalInfoMapper = externalInfoMapper;
         this.videoContentFormatMapper = videoContentFormatMapper;
         this.videoContentCompilationMapper = videoContentCompilationMapper;
+        this.videoContentTypeMapper = videoContentTypeMapper;
     }
 
     public Connection<com.writenbite.bisonfun.api.types.videocontent.VideoContent.BasicInfo> search(
@@ -758,7 +761,7 @@ public class VideoContentService {
         MovieDb movie = null;
         TvSeriesDb tv = null;
         try {
-            VideoContentType videoContentType = videoContentMapper.animeType(anime.format());
+            VideoContentType videoContentType = videoContentTypeMapper.fromAniListMediaFormat(anime.format());
             if (videoContentType == MOVIE) {
                 movie = tmdbClient.parseTmdbMovieByName(anime.title().english(), anime.startDate().year());
             } else if (videoContentType == TV) {

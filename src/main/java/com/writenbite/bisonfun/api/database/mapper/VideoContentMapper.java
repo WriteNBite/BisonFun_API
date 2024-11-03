@@ -1,10 +1,8 @@
 package com.writenbite.bisonfun.api.database.mapper;
 
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMedia;
-import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaFormat;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaTitle;
 import com.writenbite.bisonfun.api.database.entity.VideoContent;
-import com.writenbite.bisonfun.api.database.entity.VideoContentType;
 import com.writenbite.bisonfun.api.types.mapper.AniListMediaCoverImageMapper;
 import info.movito.themoviedbapi.model.movies.MovieDb;
 import info.movito.themoviedbapi.model.tv.series.TvSeriesDb;
@@ -12,7 +10,7 @@ import org.mapstruct.*;
 
 import java.sql.Date;
 
-@Mapper(uses = {VideoContentCategoryMapper.class, AniListMediaCoverImageMapper.class})
+@Mapper(uses = {VideoContentCategoryMapper.class, VideoContentTypeMapper.class, AniListMediaCoverImageMapper.class})
 public interface VideoContentMapper {
 
     @Mapping(target = "id", expression = "java(null)")
@@ -21,7 +19,7 @@ public interface VideoContentMapper {
     @Mapping(source = "idMal", target = "malId")
     @Mapping(source = "coverImage", target = "poster")
     @Mapping(target = "title", qualifiedByName = "animeTitle")
-    @Mapping(target = "type", expression = "java(animeType(anime.format()))")
+    @Mapping(target = "type", source = "format")
     @Mapping(source = "startDate.year", target = "year")
     VideoContent fromAniListMedia(AniListMedia anime);
 
@@ -85,15 +83,6 @@ public interface VideoContentMapper {
             }
         }
         throw new IllegalArgumentException();
-    }
-    @Named("animeType")
-    default VideoContentType animeType(AniListMediaFormat format){
-        return switch (format){
-            case SPECIAL -> VideoContentType.SPECIAL;
-            case TV, ONA, OVA, TV_SHORT -> VideoContentType.TV;
-            case MOVIE -> VideoContentType.MOVIE;
-            case MUSIC -> VideoContentType.MUSIC;
-        };
     }
 
     @Named("tmdbYear")
