@@ -53,6 +53,7 @@ public class VideoContent {
     @Column(name = "last_updated", nullable = false)
     private LocalDate lastUpdated;
 
+    @PreUpdate
     @PrePersist
     public void prePersist(){
         lastUpdated = LocalDate.now();
