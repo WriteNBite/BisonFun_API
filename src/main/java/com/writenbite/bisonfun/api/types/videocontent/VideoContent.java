@@ -1,7 +1,11 @@
 package com.writenbite.bisonfun.api.types.videocontent;
 
+import com.writenbite.bisonfun.api.client.tmdb.TmdbPosterConfiguration;
+
 import java.time.LocalDate;
 import java.util.List;
+
+import static com.writenbite.bisonfun.api.types.videocontent.VideoContentCategory.MAINSTREAM;
 
 public record VideoContent(
         BasicInfo basicInfo,
@@ -15,7 +19,15 @@ public record VideoContent(
             VideoContentFormat format,
             Integer year,
             ExternalId externalIds
-    ){}
+    ){
+        @Override
+        public String poster() {
+            if (poster != null && (poster.startsWith("/") && category == MAINSTREAM)){
+                return TmdbPosterConfiguration.DEFAULT.getUrl() + poster;
+            }
+            return poster;
+        }
+    }
     public record ExternalInfo(
             VideoContentStatus status,
             String description,

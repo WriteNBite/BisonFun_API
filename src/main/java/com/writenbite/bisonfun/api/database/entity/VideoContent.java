@@ -1,5 +1,6 @@
 package com.writenbite.bisonfun.api.database.entity;
 
+import com.writenbite.bisonfun.api.client.tmdb.TmdbPosterConfiguration;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -57,6 +58,13 @@ public class VideoContent {
     @PrePersist
     public void prePersist(){
         lastUpdated = LocalDate.now();
+    }
+
+    public String getPoster() {
+        if (poster.startsWith("/") && category == VideoContentCategory.MAINSTREAM){
+            return TmdbPosterConfiguration.DEFAULT.getUrl() + poster;
+        }
+        return poster;
     }
 
     @Override
