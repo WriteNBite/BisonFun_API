@@ -6,6 +6,8 @@ import com.writenbite.bisonfun.api.types.videocontent.VideoContentFormat;
 import org.mapstruct.Mapper;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Mapper
 public interface VideoContentFormatMapper {
@@ -15,24 +17,15 @@ public interface VideoContentFormatMapper {
     VideoContentType toVideoContentType(VideoContentFormat format);
 
     default Collection<AniListMediaFormat> toAniListMediaFormat(List<VideoContentFormat> formats){
-        Set<AniListMediaFormat> formatSet = new HashSet<>();
-        for (VideoContentFormat format : formats){
-            switch (format){
-                case MOVIE -> formatSet.add(AniListMediaFormat.MOVIE);
-                case TV -> {
-                    formatSet.add(AniListMediaFormat.TV);
-                    formatSet.add(AniListMediaFormat.TV_SHORT);
-                    formatSet.add(AniListMediaFormat.ONA);
-                    formatSet.add(AniListMediaFormat.OVA);
-                }
-                case SPECIAL -> formatSet.add(AniListMediaFormat.SPECIAL);
-                case MUSIC -> formatSet.add(AniListMediaFormat.MUSIC);
-            }
-            if(formatSet.size() == AniListMediaFormat.values().length){
-                break;
-            }
-        }
-        return formatSet;
+        return formats.stream()
+                .flatMap(format -> switch (format) {
+                    case MOVIE -> Stream.of(AniListMediaFormat.MOVIE);
+                    case TV -> Stream.of(AniListMediaFormat.TV, AniListMediaFormat.TV_SHORT, AniListMediaFormat.ONA, AniListMediaFormat.OVA);
+                    case SPECIAL -> Stream.of(AniListMediaFormat.SPECIAL);
+                    case MUSIC -> Stream.of(AniListMediaFormat.MUSIC);
+                    default -> Stream.empty();
+                })
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(AniListMediaFormat.class)));
     }
 
 }
