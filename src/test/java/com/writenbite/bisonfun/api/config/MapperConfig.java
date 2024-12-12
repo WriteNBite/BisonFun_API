@@ -1,6 +1,6 @@
 package com.writenbite.bisonfun.api.config;
 
-import com.writenbite.bisonfun.api.types.mapper.AniListMediaCoverImageMapper;
+import com.writenbite.bisonfun.api.client.anilist.mapper.AniListMediaCoverImageMapper;
 import com.writenbite.bisonfun.api.types.mapper.UserMapper;
 import org.mapstruct.factory.Mappers;
 import org.springframework.context.annotation.Bean;

@@ -1,4 +1,4 @@
-package com.writenbite.bisonfun.api.types.mapper;
+package com.writenbite.bisonfun.api.client.anilist.mapper;
 
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaCoverImage;
 import org.mapstruct.Mapper;

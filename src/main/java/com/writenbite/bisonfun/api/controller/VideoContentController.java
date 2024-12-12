@@ -8,7 +8,6 @@ import com.writenbite.bisonfun.api.types.Connection;
 import com.writenbite.bisonfun.api.types.videocontent.input.VideoContentIdInput;
 import com.writenbite.bisonfun.api.types.videocontent.*;
 import com.writenbite.bisonfun.api.types.videocontent.output.TrendVideoContentResponse;
-import graphql.GraphQLError;
 import graphql.execution.DataFetcherResult;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.SelectedField;
@@ -17,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
-import org.springframework.graphql.execution.ErrorType;
 import org.springframework.stereotype.Controller;
 
 import java.util.ArrayList;
@@ -32,108 +30,6 @@ public class VideoContentController {
     @Autowired
     public VideoContentController(VideoContentService videoContentService) {
         this.videoContentService = videoContentService;
-    }
-
-    @QueryMapping
-    public DataFetcherResult<VideoContent> videoContent(@Argument long id, DataFetchingEnvironment environment) throws ContentNotFoundException {
-        List<SelectedField> fields = new ArrayList<>(environment.getSelectionSet()
-                .getFields());
-        boolean hasExternalInfo = fields.stream().anyMatch(field -> field.getQualifiedName().equalsIgnoreCase("ExternalInfo"));
-
-        DataFetcherResult.Builder<VideoContent> builder = DataFetcherResult.newResult();
-        try {
-            builder.data(videoContentService.getVideoContentById(id, hasExternalInfo));
-        } catch (ExternalInfoException e) {
-            builder
-                    .data(new VideoContent(e.getData(VideoContent.BasicInfo.class).orElse(null), null))
-                    .error(
-                            GraphQLError.newError()
-                                    .errorType(ErrorType.INTERNAL_ERROR)
-                                    .message(e.getMessage())
-                                    .build()
-                    );
-        }
-        return builder.build();
-    }
-
-    @QueryMapping
-    public DataFetcherResult<VideoContent> videoContentByAniListId(@Argument Integer aniListId, DataFetchingEnvironment environment) throws ContentNotFoundException {
-        List<SelectedField> fields = new ArrayList<>(environment.getSelectionSet()
-                .getFields());
-        boolean hasExternalInfo = fields.stream().anyMatch(field -> field.getQualifiedName().equalsIgnoreCase("ExternalInfo"));
-        DataFetcherResult.Builder<VideoContent> builder = DataFetcherResult.newResult();
-        try {
-            builder.data(videoContentService.getVideoContentByAniListId(aniListId, hasExternalInfo));
-        } catch (ExternalInfoException e) {
-            builder.data(new VideoContent(e.getData(VideoContent.BasicInfo.class).orElse(null), null))
-                    .error(
-                            GraphQLError.newError()
-                                    .errorType(ErrorType.INTERNAL_ERROR)
-                                    .message(e.getMessage())
-                                    .build()
-                    );
-        }
-        return builder.build();
-    }
-
-    @QueryMapping
-    public DataFetcherResult<VideoContent> videoContentByTmdbId(@Argument Integer tmdbId, @Argument VideoContentFormat format, DataFetchingEnvironment environment) throws ContentNotFoundException {
-        List<SelectedField> fields = new ArrayList<>(environment.getSelectionSet()
-                .getFields());
-        boolean hasExternalInfo = fields.stream().anyMatch(field -> field.getQualifiedName().equalsIgnoreCase("ExternalInfo"));
-        DataFetcherResult.Builder<VideoContent> builder = DataFetcherResult.newResult();
-        try {
-            builder.data(videoContentService.getVideoContentByTmdbId(tmdbId, format, hasExternalInfo));
-        } catch (ExternalInfoException e) {
-            builder.data(new VideoContent(e.getData(VideoContent.BasicInfo.class).orElse(null), null))
-                    .error(
-                            GraphQLError.newError()
-                                    .errorType(ErrorType.INTERNAL_ERROR)
-                                    .message(e.getMessage())
-                                    .build()
-                    );
-        }
-        return builder.build();
-    }
-
-    @QueryMapping
-    public DataFetcherResult<VideoContent> videoContentByMalId(@Argument Integer malId, DataFetchingEnvironment environment) throws ContentNotFoundException {
-        List<SelectedField> fields = new ArrayList<>(environment.getSelectionSet()
-                .getFields());
-        boolean hasExternalInfo = fields.stream().anyMatch(field -> field.getQualifiedName().equalsIgnoreCase("ExternalInfo"));
-        DataFetcherResult.Builder<VideoContent> builder = DataFetcherResult.newResult();
-        try {
-            builder.data(videoContentService.getVideoContentByMalId(malId,hasExternalInfo));
-        } catch (ExternalInfoException e) {
-            builder.data(new VideoContent(e.getData(VideoContent.BasicInfo.class).orElse(null), null))
-                    .error(
-                            GraphQLError.newError()
-                                    .errorType(ErrorType.INTERNAL_ERROR)
-                                    .message(e.getMessage())
-                                    .build()
-                    );
-        }
-        return builder.build();
-    }
-
-    @QueryMapping
-    public DataFetcherResult<VideoContent> videoContentByImdbId(@Argument String imdbId, DataFetchingEnvironment environment) throws ContentNotFoundException {
-        List<SelectedField> fields = new ArrayList<>(environment.getSelectionSet()
-                .getFields());
-        boolean hasExternalInfo = fields.stream().anyMatch(field -> field.getQualifiedName().equalsIgnoreCase("ExternalInfo"));
-        DataFetcherResult.Builder<VideoContent> builder = DataFetcherResult.newResult();
-        try {
-            builder.data(videoContentService.getVideoContentByImdbId(imdbId,hasExternalInfo));
-        } catch (ExternalInfoException e) {
-            builder.data(new VideoContent(e.getData(VideoContent.BasicInfo.class).orElse(null), null))
-                    .error(
-                            GraphQLError.newError()
-                                    .errorType(ErrorType.INTERNAL_ERROR)
-                                    .message(e.getMessage())
-                                    .build()
-                    );
-        }
-        return builder.build();
     }
 
     @QueryMapping

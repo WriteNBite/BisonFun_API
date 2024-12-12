@@ -7,12 +7,12 @@ import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaStatus
 import com.writenbite.bisonfun.api.client.tmdb.TmdbClient;
 import com.writenbite.bisonfun.api.database.entity.*;
 import com.writenbite.bisonfun.api.database.mapper.VideoContentCategoryMapper;
+import com.writenbite.bisonfun.api.database.mapper.VideoContentMapper;
 import com.writenbite.bisonfun.api.database.repository.UserVideoContentPageableRepository;
 import com.writenbite.bisonfun.api.database.repository.UserVideoContentRepository;
 import com.writenbite.bisonfun.api.types.*;
 import com.writenbite.bisonfun.api.types.mapper.UserVideoContentListElementMapper;
 import com.writenbite.bisonfun.api.types.mapper.UserVideoContentListStatusMapper;
-import com.writenbite.bisonfun.api.types.mapper.VideoContentBasicInfoMapper;
 import com.writenbite.bisonfun.api.types.mapper.VideoContentFormatMapper;
 import com.writenbite.bisonfun.api.types.uservideocontent.input.UpdateUserVideoContentListElementInput;
 import com.writenbite.bisonfun.api.types.videocontent.input.VideoContentIdInput;
@@ -46,7 +46,7 @@ public class UserVideoContentService {
     private final VideoContentCategoryMapper categoryMapper;
     private final VideoContentFormatMapper formatMapper;
     private final UserVideoContentListElementMapper userVideoContentListElementMapper;
-    private final VideoContentBasicInfoMapper videoContentBasicInfoMapper;
+    private final VideoContentMapper videoContentDbMapper;
     private final VideoContentService videoContentService;
 
     private Optional<VideoContentModel> getVideoContentModel(VideoContent videoContent) throws TooManyAnimeRequestsException {
@@ -154,7 +154,7 @@ public class UserVideoContentService {
         int size = userVideoContentPageableRepository.countUserVideoContent(userId, input.episode(), queryScore, statuses.isEmpty() ? null : statuses, categories.isEmpty() ? null : categories, types.isEmpty() ? null : types, input.yearFrom(), input.yearTo());
         Pageable pageable = PageRequest.of(new Random().nextInt(size), 1);
         Slice<UserVideoContent> result = userVideoContentPageableRepository.findUserVideoContentSlice(userId, input.episode(), queryScore, statuses.isEmpty() ? null : statuses, categories.isEmpty() ? null : categories, types.isEmpty() ? null : types, input.yearFrom(), input.yearTo(), pageable);
-        return videoContentBasicInfoMapper.fromVideoContentDb(result.getContent().getFirst().getVideoContent());
+        return videoContentDbMapper.toBasicInfo(result.getContent().getFirst().getVideoContent());
     }
 
     public UserVideoContentListElement userVideoContentListElement(int userId, long videoContentId) throws ContentNotFoundException {

@@ -5,10 +5,16 @@ import com.writenbite.bisonfun.api.client.ContentNotFoundException;
 import com.writenbite.bisonfun.api.client.NoAccessException;
 import com.writenbite.bisonfun.api.client.anilist.AniListClient;
 import com.writenbite.bisonfun.api.client.anilist.TooManyAnimeRequestsException;
+import com.writenbite.bisonfun.api.client.anilist.mapper.AniListMediaMapper;
+import com.writenbite.bisonfun.api.client.anilist.mapper.AniListMediaTitleMapper;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMedia;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaFormat;
 import com.writenbite.bisonfun.api.client.anilist.types.AniListPage;
 import com.writenbite.bisonfun.api.client.tmdb.TmdbClient;
+import com.writenbite.bisonfun.api.client.tmdb.mapper.MovieDbMapper;
+import com.writenbite.bisonfun.api.client.tmdb.mapper.TvSeriesDbMapper;
+import com.writenbite.bisonfun.api.client.tmdb.types.TmdbMovie;
+import com.writenbite.bisonfun.api.client.tmdb.types.TmdbTvSeries;
 import com.writenbite.bisonfun.api.database.entity.UserVideoContent;
 import com.writenbite.bisonfun.api.database.entity.VideoContent;
 import com.writenbite.bisonfun.api.database.entity.VideoContentCategory;
@@ -22,8 +28,6 @@ import com.writenbite.bisonfun.api.types.videocontent.output.BasicInfoConnection
 import com.writenbite.bisonfun.api.types.Connection;
 import com.writenbite.bisonfun.api.types.PageInfo;
 import com.writenbite.bisonfun.api.types.videocontent.VideoContentFormat;
-import com.writenbite.bisonfun.api.types.mapper.VideoContentBasicInfoMapper;
-import com.writenbite.bisonfun.api.types.mapper.VideoContentExternalInfoMapper;
 import com.writenbite.bisonfun.api.types.mapper.VideoContentFormatMapper;
 import info.movito.themoviedbapi.model.core.Movie;
 import info.movito.themoviedbapi.model.core.MovieResultsPage;
@@ -53,6 +57,9 @@ public class VideoContentService {
     private final static int ANILIST_ID_DEFAULT = -1;
     private final static String IMDB_ID_DEFAULT = "";
     private final static int MAL_ID_DEFAULT = -1;
+    private final AniListMediaMapper aniListMediaMapper;
+    private final MovieDbMapper movieDbMapper;
+    private final TvSeriesDbMapper tvSeriesDbMapper;
 
     @Value("${bisonfun.data-update.range-in-days}")
     private Integer dayRange;
@@ -62,24 +69,27 @@ public class VideoContentService {
     private final VideoContentRepository videoContentRepository;
     private final TmdbClient tmdbClient;
     private final AniListClient aniListClient;
+    private final AniListMediaTitleMapper aniListMediaTitleMapper;
     private final VideoContentMapper videoContentMapper;
-    private final VideoContentBasicInfoMapper basicInfoMapper;
-    private final VideoContentExternalInfoMapper externalInfoMapper;
+    private final RawVideoContentFactory rawVideoContentFactory;
     private final VideoContentTypeMapper videoContentTypeMapper;
 
     @Autowired
-    public VideoContentService(VideoContentRepository videoContentRepository, TmdbClient tmdbClient, AniListClient aniListClient, VideoContentMapper videoContentMapper, VideoContentBasicInfoMapper basicInfoMapper, VideoContentExternalInfoMapper externalInfoMapper,
+    public VideoContentService(VideoContentRepository videoContentRepository, TmdbClient tmdbClient, AniListClient aniListClient, VideoContentMapper videoContentMapper, AniListMediaTitleMapper aniListMediaTitleMapper,
                                VideoContentFormatMapper videoContentFormatMapper,
-                               VideoContentCompilationMapper videoContentCompilationMapper, VideoContentTypeMapper videoContentTypeMapper) {
+                               VideoContentCompilationMapper videoContentCompilationMapper, RawVideoContentFactory rawVideoContentFactory, VideoContentTypeMapper videoContentTypeMapper, AniListMediaMapper aniListMediaMapper, MovieDbMapper movieDbMapper, TvSeriesDbMapper tvSeriesDbMapper) {
         this.videoContentRepository = videoContentRepository;
         this.tmdbClient = tmdbClient;
         this.aniListClient = aniListClient;
         this.videoContentMapper = videoContentMapper;
-        this.basicInfoMapper = basicInfoMapper;
-        this.externalInfoMapper = externalInfoMapper;
+        this.aniListMediaTitleMapper = aniListMediaTitleMapper;
         this.videoContentFormatMapper = videoContentFormatMapper;
         this.videoContentCompilationMapper = videoContentCompilationMapper;
+        this.rawVideoContentFactory = rawVideoContentFactory;
         this.videoContentTypeMapper = videoContentTypeMapper;
+        this.aniListMediaMapper = aniListMediaMapper;
+        this.movieDbMapper = movieDbMapper;
+        this.tvSeriesDbMapper = tvSeriesDbMapper;
     }
 
     public Connection<com.writenbite.bisonfun.api.types.videocontent.VideoContent.BasicInfo> search(
@@ -105,7 +115,7 @@ public class VideoContentService {
                     Map<Movie, VideoContent> movieMediaVideoContentMap = getMovieVideoContentMap(movies.getResults());
                     searchResult.addAll(movieMediaVideoContentMap.keySet()
                             .stream()
-                            .map(movie -> basicInfoMapper.fromBasicModels(movieMediaVideoContentMap.getOrDefault(movie, null), movie, null, null))
+                            .map(movie -> rawVideoContentFactory.toBasicInfo(new TmdbMovie(movie), movieMediaVideoContentMap.getOrDefault(movie, null)))
                             .toList());
                 }
                 if (formats.contains(VideoContentFormat.TV)) {
@@ -117,7 +127,7 @@ public class VideoContentService {
                     Map<TvSeries, VideoContent> tvMediaVideoContentMap = getTvSeriesVideoContentMap(tvs.getResults());
                     searchResult.addAll(tvMediaVideoContentMap.keySet()
                             .stream()
-                            .map(tvSeries -> basicInfoMapper.fromBasicModels(tvMediaVideoContentMap.getOrDefault(tvSeries, null), null, tvSeries, null))
+                            .map(tvSeries -> rawVideoContentFactory.toBasicInfo(new TmdbTvSeries(tvSeries), tvMediaVideoContentMap.getOrDefault(tvSeries, null)))
                             .toList());
                 }
                 perPage = searchResult.size();
@@ -141,240 +151,13 @@ public class VideoContentService {
                 searchResult.addAll(
                         aniListMediaVideoContentMap.keySet()
                                 .stream()
-                                .map(media -> basicInfoMapper.fromModels(aniListMediaVideoContentMap.getOrDefault(media, null), media, null, null))
+                                .map(media -> rawVideoContentFactory.toBasicInfo(aniListMediaVideoContentMap.getOrDefault(media, null), media))
                                 .toList()
                 );
             }
         }
         PageInfo pageInfo = new PageInfo(totalResults, perPage, page, totalPages, hasNextPage);
         return new BasicInfoConnection(searchResult, pageInfo);
-    }
-
-
-    /**
-     * @param id the original video content id
-     * @return video content if exist
-     * @deprecated use {@link #getVideoContentByIdInput(VideoContentIdInput, boolean)}
-     */
-    @Deprecated
-    public Optional<VideoContent> getVideoContentById(Long id) {
-        return videoContentRepository.findById(id);
-    }
-
-    /**
-     * @param id the original video content id
-     * @param hasExternalInfo if request contains need of information from external sources
-     * @return video content
-     * @throws ContentNotFoundException if content wasn't found
-     * @throws ExternalInfoException when accessing to external info is causing trouble
-     * @deprecated use {@link #getVideoContentByIdInput(VideoContentIdInput, boolean)}
-     */
-    @Deprecated
-    public com.writenbite.bisonfun.api.types.videocontent.VideoContent getVideoContentById(Long id, boolean hasExternalInfo) throws ContentNotFoundException, ExternalInfoException {
-        Optional<VideoContent> optionalVideoContent = getVideoContentById(id);
-        if (optionalVideoContent.isPresent()) {
-            com.writenbite.bisonfun.api.types.videocontent.VideoContent.BasicInfo basicInfo;
-            com.writenbite.bisonfun.api.types.videocontent.VideoContent.ExternalInfo externalInfo = null;
-            VideoContent videoContentDb = optionalVideoContent.get();
-            if (hasExternalInfo) {
-                AniListMedia anime = null;
-                MovieDb movieDb = null;
-                TvSeriesDb tvSeriesDb = null;
-
-                try {
-                    anime = videoContentDb.getCategory() == VideoContentCategory.ANIME ? aniListClient.parseAnimeById(videoContentDb.getAniListId()) : null;
-                } catch (ContentNotFoundException | TooManyAnimeRequestsException e) {
-                    log.error(e.getMessage());
-                }
-                movieDb = videoContentDb.getType() == MOVIE ? tmdbClient.parseMovieById(videoContentDb.getTmdbId()) : null;
-                tvSeriesDb = videoContentDb.getType() == TV ? tmdbClient.parseShowById(videoContentDb.getTmdbId()) : null;
-                basicInfo = basicInfoMapper.fromModels(videoContentDb, anime, movieDb, tvSeriesDb);
-                if (anime != null || movieDb != null || tvSeriesDb != null) {
-                    externalInfo = anime != null ? externalInfoMapper.fromAniListMedia(anime) : (movieDb != null ? externalInfoMapper.fromMovieDb(movieDb) : externalInfoMapper.fromTvSeriesDb(tvSeriesDb));
-                } else {
-                    throw new ExternalInfoException(basicInfo);
-                }
-            } else {
-                basicInfo = basicInfoMapper.fromVideoContentDb(optionalVideoContent.get());
-            }
-            return new com.writenbite.bisonfun.api.types.videocontent.VideoContent(basicInfo, externalInfo);
-        } else {
-            throw new ContentNotFoundException("Can't find VideoContent by id " + id);
-        }
-    }
-
-    /**
-     * @param aniListId the id from anilist.co
-     * @param hasExternalInfo if request contains need of information from external sources
-     * @return video content
-     * @throws ContentNotFoundException if content wasn't found
-     * @throws ExternalInfoException when accessing to external info is causing trouble
-     * @deprecated use {@link #getVideoContentByIdInput(VideoContentIdInput, boolean)}
-     */
-    @Deprecated
-    public com.writenbite.bisonfun.api.types.videocontent.VideoContent getVideoContentByAniListId(Integer aniListId, boolean hasExternalInfo) throws ContentNotFoundException, ExternalInfoException {
-        Optional<VideoContent> optionalVideoContent = videoContentRepository.findByAniListId(aniListId);
-        com.writenbite.bisonfun.api.types.videocontent.VideoContent.BasicInfo basicInfo;
-        com.writenbite.bisonfun.api.types.videocontent.VideoContent.ExternalInfo externalInfo = null;
-
-        if (optionalVideoContent.isEmpty() || hasExternalInfo) {
-            Exception thrownException = null;
-            VideoContent videoContentDb = optionalVideoContent.orElse(null);
-
-            MovieDb movieDb = null;
-            TvSeriesDb tvSeriesDb = null;
-            if (optionalVideoContent.isPresent()) {
-                movieDb = videoContentDb.getType() == MOVIE ? tmdbClient.parseMovieById(videoContentDb.getTmdbId()) : null;
-                tvSeriesDb = videoContentDb.getType() == TV ? tmdbClient.parseShowById(videoContentDb.getTmdbId()) : null;
-            }
-            AniListMedia anime = null;
-            try {
-                anime = aniListClient.parseAnimeById(aniListId);
-            } catch (TooManyAnimeRequestsException e) {
-                log.error(e.getMessage());
-                if (optionalVideoContent.isEmpty()) {
-                    throw new ContentNotFoundException();
-                }
-                thrownException = e;
-            }
-            basicInfo = basicInfoMapper.fromModels(videoContentDb, anime, movieDb, tvSeriesDb);
-            if (thrownException != null) {
-                throw new ExternalInfoException(thrownException.getMessage(), basicInfo);
-            }
-            externalInfo = externalInfoMapper.fromAniListMedia(anime);
-        } else {
-            basicInfo = basicInfoMapper.fromVideoContentDb(optionalVideoContent.get());
-        }
-        return new com.writenbite.bisonfun.api.types.videocontent.VideoContent(basicInfo, externalInfo);
-    }
-
-    /**
-     * @param tmdbId the id from themoviedb.com
-     * @param format of a video content request
-     * @param hasExternalInfo if request contains need of information from external sources
-     * @return video content
-     * @throws ContentNotFoundException if content wasn't found
-     * @throws ExternalInfoException when accessing to external info is causing trouble
-     * @deprecated use {@link #getVideoContentByIdInput(VideoContentIdInput, boolean)}
-     */
-    @Deprecated
-    public com.writenbite.bisonfun.api.types.videocontent.VideoContent getVideoContentByTmdbId(Integer tmdbId, VideoContentFormat format, boolean hasExternalInfo) throws ContentNotFoundException, ExternalInfoException {
-        return getVideoContentByTmdbId(tmdbId, videoContentFormatMapper.toVideoContentType(format), hasExternalInfo);
-    }
-
-    /**
-     * @param tmdbId the id from themoviedb.com
-     * @param type of video content from database
-     * @param hasExternalInfo if request contains need of information from external sources
-     * @return video content
-     * @throws ContentNotFoundException if content wasn't found
-     * @throws ExternalInfoException when accessing to external info is causing trouble
-     * @deprecated use {@link #getVideoContentByIdInput(VideoContentIdInput, boolean)}
-     */
-    @Deprecated
-    public com.writenbite.bisonfun.api.types.videocontent.VideoContent getVideoContentByTmdbId(Integer tmdbId, VideoContentType type, boolean hasExternalInfo) throws ContentNotFoundException, ExternalInfoException {
-
-        Optional<VideoContent> optionalVideoContentDb = videoContentRepository.findByTmdbIdAndType(tmdbId, type);
-        com.writenbite.bisonfun.api.types.videocontent.VideoContent.BasicInfo basicInfo;
-        com.writenbite.bisonfun.api.types.videocontent.VideoContent.ExternalInfo externalInfo = null;
-
-        if (optionalVideoContentDb.isEmpty() || hasExternalInfo) {
-            VideoContent videoContentDb = optionalVideoContentDb.orElse(null);
-            Exception exception = null;
-
-            AniListMedia anime = null;
-            MovieDb movieDb = null;
-            TvSeriesDb tvSeriesDb = null;
-            List<Keyword> keywordResults = new ArrayList<>();
-            String title = "";
-            if (type == MOVIE) {
-                movieDb = tmdbClient.parseMovieById(tmdbId);
-                keywordResults = movieDb.getKeywords().getKeywords();
-                title = movieDb.getTitle();
-            } else if (type == TV) {
-                tvSeriesDb = tmdbClient.parseShowById(tmdbId);
-                keywordResults = tvSeriesDb.getKeywords().getResults();
-                title = tvSeriesDb.getName();
-            }
-            if (videoContentDb != null && videoContentDb.getAniListId() != null) {
-                try {
-                    anime = aniListClient.parseAnimeById(videoContentDb.getAniListId());
-                } catch (ContentNotFoundException e) {
-                    log.error("Anime not found by id: " + videoContentDb.getAniListId());
-                } catch (TooManyAnimeRequestsException e) {
-                    log.error("It's too many requests for AniList");
-                    exception = e;
-                }
-            } else if (!keywordResults.isEmpty()) {
-                boolean isAnime = keywordResults.stream()
-                        .anyMatch(keyword -> keyword.getName().equalsIgnoreCase("anime"));
-                try {
-                    anime = isAnime ? aniListClient.parseAnimeByName(title) : null;
-                } catch (ContentNotFoundException e) {
-                    log.error("Anime not found by name: " + title);
-                } catch (TooManyAnimeRequestsException e) {
-                    log.error("It's too many requests for AniList");
-                    exception = e;
-                }
-            }
-            basicInfo = basicInfoMapper.fromModels(videoContentDb, anime, movieDb, tvSeriesDb);
-
-            if (exception != null) {
-                throw new ExternalInfoException(exception.getMessage(), basicInfo);
-            }
-
-            externalInfo = type == MOVIE ? externalInfoMapper.fromMovieDb(movieDb) : externalInfoMapper.fromTvSeriesDb(tvSeriesDb);
-        } else {
-            basicInfo = basicInfoMapper.fromVideoContentDb(optionalVideoContentDb.get());
-        }
-        return new com.writenbite.bisonfun.api.types.videocontent.VideoContent(basicInfo, externalInfo);
-    }
-
-    /**
-     * @param imdbId the id from imdb.com
-     * @param hasExternalInfo if request contains need of information from external sources
-     * @return video content
-     * @throws ContentNotFoundException if content wasn't found
-     * @throws ExternalInfoException when accessing to external info is causing trouble
-     * @deprecated use {@link #getVideoContentByIdInput(VideoContentIdInput, boolean)}
-     */
-    @Deprecated
-    public com.writenbite.bisonfun.api.types.videocontent.VideoContent getVideoContentByImdbId(String imdbId, boolean hasExternalInfo) throws ContentNotFoundException, ExternalInfoException {
-        Optional<VideoContent> optionalVideoContent = videoContentRepository.findByImdbId(imdbId);
-
-        if (optionalVideoContent.isPresent()) {
-            VideoContent videoContent = optionalVideoContent.get();
-            if (hasExternalInfo) {
-                return videoContent.getCategory() == VideoContentCategory.ANIME ? getVideoContentByAniListId(videoContent.getAniListId(), true) : getVideoContentByTmdbId(videoContent.getTmdbId(), videoContent.getType(), true);
-            } else {
-                return new com.writenbite.bisonfun.api.types.videocontent.VideoContent(basicInfoMapper.fromVideoContentDb(videoContent), null);
-            }
-        } else {
-            throw new ContentNotFoundException();
-        }
-    }
-
-    /**
-     * @param malId the id from myanimelist.com
-     * @param hasExternalInfo if request contains need of information from external sources
-     * @return video content
-     * @throws ContentNotFoundException if content wasn't found
-     * @throws ExternalInfoException when accessing to external info is causing trouble
-     * @deprecated use {@link #getVideoContentByIdInput(VideoContentIdInput, boolean)}
-     */
-    @Deprecated
-    public com.writenbite.bisonfun.api.types.videocontent.VideoContent getVideoContentByMalId(Integer malId, boolean hasExternalInfo) throws ContentNotFoundException, ExternalInfoException {
-        Optional<VideoContent> optionalVideoContent = videoContentRepository.findByMalId(malId);
-        if (optionalVideoContent.isPresent()) {
-            VideoContent videoContent = optionalVideoContent.get();
-            if (hasExternalInfo) {
-                return getVideoContentByAniListId(videoContent.getAniListId(), true);
-            } else {
-                return new com.writenbite.bisonfun.api.types.videocontent.VideoContent(basicInfoMapper.fromVideoContentDb(videoContent), null);
-            }
-        } else {
-            throw new ContentNotFoundException();
-        }
     }
 
     /**
@@ -390,7 +173,7 @@ public class VideoContentService {
     public com.writenbite.bisonfun.api.types.videocontent.VideoContent getVideoContentByIdInput(VideoContentIdInput input, boolean hasExternalInfo) throws ExternalInfoException, ContentNotFoundException, TooManyAnimeRequestsException {
         com.writenbite.bisonfun.api.types.videocontent.VideoContent.BasicInfo basicInfo;
         com.writenbite.bisonfun.api.types.videocontent.VideoContent.ExternalInfo externalInfo = null;
-        basicInfo = basicInfoMapper.fromVideoContentDb(getOrCreateVideoContent(input));
+        basicInfo = videoContentMapper.toBasicInfo(getOrCreateVideoContent(input));
         if (hasExternalInfo){
             VideoContentCompilation compilation;
             try {
@@ -400,11 +183,11 @@ public class VideoContentService {
                 throw new ExternalInfoException(e.getMessage(), basicInfo);
             }
             if (compilation.aniListMedia() != null) {
-                externalInfo = externalInfoMapper.fromAniListMedia(compilation.aniListMedia());
+                externalInfo = aniListMediaMapper.toExternalInfo(compilation.aniListMedia());
             } else if (compilation.movieDb() != null) {
-                externalInfo = externalInfoMapper.fromMovieDb(compilation.movieDb());
+                externalInfo = movieDbMapper.toExternalInfo(compilation.movieDb());
             } else if (compilation.tvSeriesDb() != null) {
-                externalInfo = externalInfoMapper.fromTvSeriesDb(compilation.tvSeriesDb());
+                externalInfo = tvSeriesDbMapper.toExternalInfo(compilation.tvSeriesDb());
             }
         }
         return new com.writenbite.bisonfun.api.types.videocontent.VideoContent(basicInfo, externalInfo);
@@ -494,7 +277,7 @@ public class VideoContentService {
             return getOrCreateVideoContent(fetchedInput);
         }
 
-        VideoContent videoContent = videoContentMapper.fromModels(fetchedContent.aniListMedia(), fetchedContent.movieDb(), fetchedContent.tvSeriesDb());
+        VideoContent videoContent = rawVideoContentFactory.toVideoContentDb(fetchedContent.aniListMedia(), fetchedContent.movieDb(), fetchedContent.tvSeriesDb());
         return saveVideoContent(videoContent);
     }
 
@@ -508,7 +291,7 @@ public class VideoContentService {
      */
     private VideoContent fetchAndUpdateVideoContent(VideoContentIdInput input) throws ContentNotFoundException, TooManyAnimeRequestsException {
         VideoContentCompilation fetchedContent = fetchVideoContent(input);
-        VideoContent videoContent = videoContentMapper.fromModels(fetchedContent.aniListMedia(), fetchedContent.movieDb(), fetchedContent.tvSeriesDb());
+        VideoContent videoContent = rawVideoContentFactory.toVideoContentDb(fetchedContent.aniListMedia(), fetchedContent.movieDb(), fetchedContent.tvSeriesDb());
         return updateContent(videoContent).orElseThrow(() -> new ContentNotFoundException("Can't find video content by input: " + input));
     }
 
@@ -764,12 +547,12 @@ public class VideoContentService {
             VideoContentType videoContentType = videoContentTypeMapper.fromAniListMediaFormat(anime.format());
             if (videoContentType == MOVIE) {
                 movie = tmdbClient.parseTmdbMovieByName(
-                        basicInfoMapper.animeEnglishTitle(anime.title()),
+                        aniListMediaTitleMapper.animeEnglishTitle(anime.title()),
                         anime.startDate() != null ? anime.startDate().year() : null
                 );
             } else if (videoContentType == TV) {
                 tv = tmdbClient.parseTmdbTvByName(
-                        basicInfoMapper.animeEnglishTitle(anime.title()),
+                        aniListMediaTitleMapper.animeEnglishTitle(anime.title()),
                         anime.startDate() != null ? anime.startDate().year() : null
                 );
             }
@@ -1008,7 +791,7 @@ public class VideoContentService {
         Map<AniListMedia, VideoContent> aniListMediaVideoContentMap = getAniListMediaVideoContentMap(aniListMedia.getList());
         return aniListMediaVideoContentMap.keySet()
                 .stream()
-                .map(media -> basicInfoMapper.fromModels(aniListMediaVideoContentMap.getOrDefault(media, null), media, null, null))
+                .map(media -> rawVideoContentFactory.toBasicInfo(aniListMediaVideoContentMap.getOrDefault(media, null), media))
                 .collect(Collectors.toList());
     }
 
@@ -1023,7 +806,7 @@ public class VideoContentService {
         Map<Movie, VideoContent> movieMediaVideoContentMap = getMovieVideoContentMap(movieTrends.getResults());
         return movieMediaVideoContentMap.keySet()
                 .stream()
-                .map(movie -> basicInfoMapper.fromBasicModels(movieMediaVideoContentMap.getOrDefault(movie, null), movie, null, null))
+                .map(movie -> rawVideoContentFactory.toBasicInfo(movieMediaVideoContentMap.getOrDefault(movie, null), new TmdbMovie(movie)))
                 .collect(Collectors.toList());
     }
 
@@ -1038,7 +821,7 @@ public class VideoContentService {
         Map<TvSeries, VideoContent> tvMediaVideoContentMap = getTvSeriesVideoContentMap(tvTrends.getResults());
         return tvMediaVideoContentMap.keySet()
                 .stream()
-                .map(tvSeries -> basicInfoMapper.fromBasicModels(tvMediaVideoContentMap.getOrDefault(tvSeries, null), null, tvSeries, null))
+                .map(tvSeries -> rawVideoContentFactory.toBasicInfo(tvMediaVideoContentMap.getOrDefault(tvSeries, null), new TmdbTvSeries(tvSeries)))
                 .collect(Collectors.toList());
     }
 }

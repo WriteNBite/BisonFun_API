@@ -5,11 +5,13 @@ import com.writenbite.bisonfun.api.client.ContentNotFoundException;
 import com.writenbite.bisonfun.api.client.anilist.AniListApiResponse;
 import com.writenbite.bisonfun.api.client.anilist.AniListClient;
 import com.writenbite.bisonfun.api.client.anilist.TooManyAnimeRequestsException;
+import com.writenbite.bisonfun.api.client.anilist.mapper.AniListMediaMapper;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMedia;
 import com.writenbite.bisonfun.api.client.tmdb.TmdbClient;
+import com.writenbite.bisonfun.api.client.tmdb.mapper.MovieDbMapper;
+import com.writenbite.bisonfun.api.client.tmdb.mapper.TvSeriesDbMapper;
 import com.writenbite.bisonfun.api.database.entity.VideoContent;
 import com.writenbite.bisonfun.api.database.entity.VideoContentCategory;
-import com.writenbite.bisonfun.api.database.mapper.VideoContentMapper;
 import info.movito.themoviedbapi.model.movies.MovieDb;
 import info.movito.themoviedbapi.model.tv.series.TvSeriesDb;
 import kong.unirest.core.json.JSONObject;
@@ -49,7 +51,11 @@ public class VideoContentBasicInfoMapperTest {
     private String konosuba;
 
     @Autowired
-    VideoContentMapper videoContentMapper;
+    AniListMediaMapper aniListMediaMapper;
+    @Autowired
+    MovieDbMapper movieDbMapper;
+    @Autowired
+    TvSeriesDbMapper tvSeriesDbMapper;
     @Autowired
     private Model<MovieDb> movieDbModel;
     @Autowired
@@ -66,7 +72,7 @@ public class VideoContentBasicInfoMapperTest {
         MovieDb expected = Instancio.of(movieDbModel).create();
         when(tmdbClient.parseMovieById(expected.getId())).thenReturn(expected);
         MovieDb movie = tmdbClient.parseMovieById(expected.getId());
-        VideoContent actualVideoContent = videoContentMapper.fromMovieDb(movie);
+        VideoContent actualVideoContent = movieDbMapper.toVideoContentDb(movie);
 
         Assertions.assertEquals(expected.getId(), actualVideoContent.getTmdbId());
         Assertions.assertEquals(expected.getTitle(), actualVideoContent.getTitle());
@@ -79,7 +85,7 @@ public class VideoContentBasicInfoMapperTest {
         TvSeriesDb expected = Instancio.of(tvSeriesDbModel).create();
         when(tmdbClient.parseShowById(expected.getId())).thenReturn(expected);
         TvSeriesDb tvSeriesDb = tmdbClient.parseShowById(expected.getId());
-        VideoContent actualVideoContent = videoContentMapper.fromTvSeriesDb(tvSeriesDb);
+        VideoContent actualVideoContent = tvSeriesDbMapper.toVideoContentDb(tvSeriesDb);
 
         Assertions.assertEquals(expected.getId(), actualVideoContent.getTmdbId());
         Assertions.assertEquals(expected.getName(), actualVideoContent.getTitle());
@@ -92,7 +98,7 @@ public class VideoContentBasicInfoMapperTest {
         AniListClient aniListClient = new AniListClient(aniListApiResponse, new Gson());
         when(aniListApiResponse.getAnimeById(136804)).thenReturn(new JSONObject(konosuba));
         AniListMedia aniListMedia = aniListClient.parseAnimeById(136804);
-        VideoContent videoContent = videoContentMapper.fromAniListMedia(aniListMedia);
+        VideoContent videoContent = aniListMediaMapper.toVideoContentDb(aniListMedia);
 
         System.out.println(aniListMedia.toString());
         System.out.println(videoContent.toString());
