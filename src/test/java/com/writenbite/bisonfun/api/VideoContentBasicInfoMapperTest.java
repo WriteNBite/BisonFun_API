@@ -8,8 +8,10 @@ import com.writenbite.bisonfun.api.client.anilist.TooManyAnimeRequestsException;
 import com.writenbite.bisonfun.api.client.anilist.mapper.AniListMediaMapper;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMedia;
 import com.writenbite.bisonfun.api.client.tmdb.TmdbClient;
-import com.writenbite.bisonfun.api.client.tmdb.mapper.MovieDbMapper;
-import com.writenbite.bisonfun.api.client.tmdb.mapper.TvSeriesDbMapper;
+import com.writenbite.bisonfun.api.client.tmdb.mapper.TmdbVideoContentMapper;
+import com.writenbite.bisonfun.api.client.tmdb.types.TmdbMovieVideoContent;
+import com.writenbite.bisonfun.api.client.tmdb.types.TmdbTvSeriesVideoContent;
+import com.writenbite.bisonfun.api.client.tmdb.types.TmdbVideoContent;
 import com.writenbite.bisonfun.api.database.entity.VideoContent;
 import com.writenbite.bisonfun.api.database.entity.VideoContentCategory;
 import info.movito.themoviedbapi.model.movies.MovieDb;
@@ -53,13 +55,11 @@ public class VideoContentBasicInfoMapperTest {
     @Autowired
     AniListMediaMapper aniListMediaMapper;
     @Autowired
-    MovieDbMapper movieDbMapper;
-    @Autowired
-    TvSeriesDbMapper tvSeriesDbMapper;
-    @Autowired
     private Model<MovieDb> movieDbModel;
     @Autowired
     private Model<TvSeriesDb> tvSeriesDbModel;
+    @Autowired
+    private TmdbVideoContentMapper tmdbVideoContentMapper;
 
     @BeforeEach
     public void setUp() throws IOException {
@@ -69,28 +69,28 @@ public class VideoContentBasicInfoMapperTest {
 
     @Test
     public void testMovieMapping() throws ContentNotFoundException {
-        MovieDb expected = Instancio.of(movieDbModel).create();
-        when(tmdbClient.parseMovieById(expected.getId())).thenReturn(expected);
-        MovieDb movie = tmdbClient.parseMovieById(expected.getId());
-        VideoContent actualVideoContent = movieDbMapper.toVideoContentDb(movie);
+        TmdbVideoContent expected = new TmdbMovieVideoContent(Instancio.of(movieDbModel).create());
+        when(tmdbClient.parseMovieById(expected.getTmdbId())).thenReturn(expected);
+        TmdbVideoContent movie = tmdbClient.parseMovieById(expected.getTmdbId());
+        VideoContent actualVideoContent = tmdbVideoContentMapper.toVideoContentDb(movie);
 
-        Assertions.assertEquals(expected.getId(), actualVideoContent.getTmdbId());
+        Assertions.assertEquals(expected.getTmdbId(), actualVideoContent.getTmdbId());
         Assertions.assertEquals(expected.getTitle(), actualVideoContent.getTitle());
         Assertions.assertEquals(VideoContentCategory.MAINSTREAM, actualVideoContent.getCategory());
-        Assertions.assertEquals(expected.getImdbID(), actualVideoContent.getImdbId());
+        Assertions.assertEquals(expected.getImdbId().get(), actualVideoContent.getImdbId());
     }
 
     @Test
     public void testTvMapping() throws ContentNotFoundException {
-        TvSeriesDb expected = Instancio.of(tvSeriesDbModel).create();
-        when(tmdbClient.parseShowById(expected.getId())).thenReturn(expected);
-        TvSeriesDb tvSeriesDb = tmdbClient.parseShowById(expected.getId());
-        VideoContent actualVideoContent = tvSeriesDbMapper.toVideoContentDb(tvSeriesDb);
+        TmdbVideoContent expected = new TmdbTvSeriesVideoContent(Instancio.of(tvSeriesDbModel).create());
+        when(tmdbClient.parseShowById(expected.getTmdbId())).thenReturn(expected);
+        TmdbVideoContent tvSeriesDb = tmdbClient.parseShowById(expected.getTmdbId());
+        VideoContent actualVideoContent = tmdbVideoContentMapper.toVideoContentDb(tvSeriesDb);
 
-        Assertions.assertEquals(expected.getId(), actualVideoContent.getTmdbId());
-        Assertions.assertEquals(expected.getName(), actualVideoContent.getTitle());
+        Assertions.assertEquals(expected.getTmdbId(), actualVideoContent.getTmdbId());
+        Assertions.assertEquals(expected.getTitle(), actualVideoContent.getTitle());
         Assertions.assertEquals(VideoContentCategory.MAINSTREAM, actualVideoContent.getCategory());
-        Assertions.assertEquals(expected.getExternalIds().getImdbId(), actualVideoContent.getImdbId());
+        Assertions.assertEquals(expected.getImdbId().get(), actualVideoContent.getImdbId());
     }
 
     @Test

@@ -2,14 +2,12 @@ package com.writenbite.bisonfun.api.service;
 
 import com.writenbite.bisonfun.api.client.anilist.mapper.AniListMediaMapper;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMedia;
-import com.writenbite.bisonfun.api.client.tmdb.mapper.MovieDbMapper;
-import com.writenbite.bisonfun.api.client.tmdb.mapper.TvSeriesDbMapper;
+import com.writenbite.bisonfun.api.client.tmdb.mapper.TmdbVideoContentMapper;
+import com.writenbite.bisonfun.api.client.tmdb.types.TmdbVideoContent;
 import com.writenbite.bisonfun.api.config.BasicInfoConfiguratorRegistry;
 import com.writenbite.bisonfun.api.types.builder.*;
 import com.writenbite.bisonfun.api.types.builder.configurator.VideoContentBasicInfoBuilderConfigurator;
 import com.writenbite.bisonfun.api.types.videocontent.VideoContent;
-import info.movito.themoviedbapi.model.movies.MovieDb;
-import info.movito.themoviedbapi.model.tv.series.TvSeriesDb;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -21,8 +19,7 @@ public class RawVideoContentFactory {
 
     private final BasicInfoConfiguratorRegistry configuratorRegistry;
     private final AniListMediaMapper aniListMediaMapper;
-    private final MovieDbMapper movieDbMapper;
-    private final TvSeriesDbMapper tvSeriesDbMapper;
+    private final TmdbVideoContentMapper tmdbVideoContentMapper;
 
     public VideoContent.BasicInfo toBasicInfo(RawVideoContent... rawVideoContents){
         VideoContentBasicInfoBuilder builder = new VideoContentBasicInfoBuilder();
@@ -46,35 +43,32 @@ public class RawVideoContentFactory {
             VideoContentBasicInfoBuilder builder,
             RawVideoContent rawVideoContent
     ){
+        if(configurator == null){
+            return;
+        }
         configurator.configure(builder, (T) rawVideoContent);
     }
 
-    public com.writenbite.bisonfun.api.database.entity.VideoContent toVideoContentDb(AniListMedia anime, MovieDb movie, TvSeriesDb tv) {
+    public com.writenbite.bisonfun.api.database.entity.VideoContent toVideoContentDb(AniListMedia anime, TmdbVideoContent tmdbVideoContent) {
         if (anime != null) {
             com.writenbite.bisonfun.api.database.entity.VideoContent videoContent = aniListMediaMapper.toVideoContentDb(anime);
 
-            com.writenbite.bisonfun.api.database.entity.VideoContent tmdbVideoContent = null;
-            if(movie != null){
-                tmdbVideoContent = movieDbMapper.toVideoContentDb(movie);
-            } else if (tv != null) {
-                tmdbVideoContent = tvSeriesDbMapper.toVideoContentDb(tv);
-            }
+            com.writenbite.bisonfun.api.database.entity.VideoContent tmdbVideoContentEntity = tmdbVideoContentMapper.toVideoContentDb(tmdbVideoContent);
 
-            if(tmdbVideoContent != null){
-                videoContent.setTmdbId(tmdbVideoContent.getTmdbId());
-                videoContent.setImdbId(tmdbVideoContent.getImdbId());
+            if(tmdbVideoContentEntity != null){
+                videoContent.setTmdbId(tmdbVideoContentEntity.getTmdbId());
+                videoContent.setImdbId(tmdbVideoContentEntity.getImdbId());
                 if(videoContent.getPoster().isEmpty()){
-                    videoContent.setPoster(tmdbVideoContent.getPoster());
+                    videoContent.setPoster(tmdbVideoContentEntity.getPoster());
                 }
             }
             return videoContent;
 
-        } else if (movie != null) {
-            return movieDbMapper.toVideoContentDb(movie);
-        } else if (tv != null) {
-            return tvSeriesDbMapper.toVideoContentDb(tv);
+        } else if (tmdbVideoContent != null) {
+            return tmdbVideoContentMapper.toVideoContentDb(tmdbVideoContent);
         } else {
             return null;
         }
     }
+
 }

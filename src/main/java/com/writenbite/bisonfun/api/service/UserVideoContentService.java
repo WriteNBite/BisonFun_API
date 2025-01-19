@@ -60,14 +60,14 @@ public class UserVideoContentService {
             return switch (videoContent.getType()) {
                 case TV, MUSIC, SPECIAL -> {
                     try {
-                        yield Optional.of(new TmdbTvSeriesVideoContentModel(tmdbClient.parseShowById(videoContent.getTmdbId())));
+                        yield Optional.of(tmdbClient.parseShowById(videoContent.getTmdbId()));
                     } catch (ContentNotFoundException e) {
                         yield Optional.empty();
                     }
                 }
                 case MOVIE -> {
                     try {
-                        yield Optional.of(new TmdbMovieVideoContentModel(tmdbClient.parseMovieById(videoContent.getTmdbId())));
+                        yield Optional.of(tmdbClient.parseMovieById(videoContent.getTmdbId()));
                     } catch (ContentNotFoundException e) {
                         yield Optional.empty();
                     }

@@ -9,6 +9,9 @@ import com.writenbite.bisonfun.api.client.anilist.types.AniListPage;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMedia;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaPage;
 import com.writenbite.bisonfun.api.client.tmdb.TmdbClient;
+import com.writenbite.bisonfun.api.client.tmdb.mapper.ResultsPageMapper;
+import com.writenbite.bisonfun.api.client.tmdb.types.TmdbVideoContent;
+import com.writenbite.bisonfun.api.client.tmdb.types.TmdbVideoContentResultsPage;
 import com.writenbite.bisonfun.api.config.ModelConfig;
 import info.movito.themoviedbapi.TmdbApi;
 import info.movito.themoviedbapi.TmdbMovies;
@@ -76,6 +79,8 @@ public class RedisCacheTest {
 
     private String konosuba;
     private String animeTrends;
+    @Autowired
+    private ResultsPageMapper resultsPageMapper;
 
     @BeforeEach
     public void setUp() throws IOException {
@@ -105,16 +110,17 @@ public class RedisCacheTest {
 
     @Test
     public void givenRedisCaching_whenMovieTrends_thenMovieTrendsReturnedFromCache() throws TmdbException, NoAccessException {
-        MovieResultsPage movieTrends = ModelConfig.ofTmdbApi(MovieResultsPage.class).create();
+        MovieResultsPage instancioMovieTrends = ModelConfig.ofTmdbApi(MovieResultsPage.class).create();
+//        ResultsPage<TmdbSimpleVideoContent> movieTrends = resultsPageMapper.fromMovieResultsPage(instancioMovieTrends);
         when(tmdbApi.getTrending()).thenReturn(tmdbTrending);
-        when(tmdbTrending.getMovies(TimeWindow.WEEK, null)).thenReturn(movieTrends);
+        when(tmdbTrending.getMovies(TimeWindow.WEEK, null)).thenReturn(instancioMovieTrends);
 
-        MovieResultsPage trendsNotCached = tmdbClient.parseMovieTrends();
-        MovieResultsPage cachedTrends = tmdbClient.parseMovieTrends();
+        TmdbVideoContentResultsPage trendsNotCached = tmdbClient.parseMovieTrends();
+        TmdbVideoContentResultsPage cachedTrends = tmdbClient.parseMovieTrends();
 
         assertThat(trendsNotCached).isEqualTo(cachedTrends);
         verify(tmdbApi, times(1)).getTrending();
-        MovieResultsPage movieTrendsFromCache = cacheManager.getCache("movieTrends").get(SimpleKey.EMPTY, MovieResultsPage.class);
+        TmdbVideoContentResultsPage movieTrendsFromCache = cacheManager.getCache("movieTrends").get(SimpleKey.EMPTY, TmdbVideoContentResultsPage.class);
         assertThat(movieTrendsFromCache).isNotNull();
         assertThat(movieTrendsFromCache).isEqualTo(cachedTrends);
     }
@@ -125,12 +131,12 @@ public class RedisCacheTest {
         when(tmdbApi.getTrending()).thenReturn(tmdbTrending);
         when(tmdbTrending.getTv(TimeWindow.WEEK, null)).thenReturn(tvTrends);
 
-        TvSeriesResultsPage trendsNotCached = tmdbClient.parseTVTrends();
-        TvSeriesResultsPage cachedTrends = tmdbClient.parseTVTrends();
+        TmdbVideoContentResultsPage trendsNotCached = tmdbClient.parseTVTrends();
+        TmdbVideoContentResultsPage cachedTrends = tmdbClient.parseTVTrends();
 
         assertThat(trendsNotCached).isEqualTo(cachedTrends);
         verify(tmdbApi, times(1)).getTrending();
-        TvSeriesResultsPage tvTrendsFromCache = cacheManager.getCache("tvTrends").get(SimpleKey.EMPTY, TvSeriesResultsPage.class);
+        TmdbVideoContentResultsPage tvTrendsFromCache = cacheManager.getCache("tvTrends").get(SimpleKey.EMPTY, TmdbVideoContentResultsPage.class);
         assertThat(tvTrendsFromCache).isNotNull();
         assertThat(tvTrendsFromCache).isEqualTo(cachedTrends);
     }
@@ -158,12 +164,12 @@ public class RedisCacheTest {
         when(tmdbApi.getMovies()).thenReturn(tmdbMovies);
         when(tmdbMovies.getDetails(MOVIE_ID, null, MovieAppendToResponse.ALTERNATIVE_TITLES, MovieAppendToResponse.RECOMMENDATIONS, MovieAppendToResponse.KEYWORDS)).thenReturn(movieDb);
 
-        MovieDb movieNotCached = tmdbClient.parseMovieById(MOVIE_ID);
-        MovieDb cachedMovie = tmdbClient.parseMovieById(MOVIE_ID);
+        TmdbVideoContent movieNotCached = tmdbClient.parseMovieById(MOVIE_ID);
+        TmdbVideoContent cachedMovie = tmdbClient.parseMovieById(MOVIE_ID);
 
         assertThat(movieNotCached).isEqualTo(cachedMovie);
         verify(tmdbApi, times(1)).getMovies();
-        Optional<MovieDb> movieFromCache = getCachedJSONObject("jsonMovie", MOVIE_ID, MovieDb.class);
+        Optional<TmdbVideoContent> movieFromCache = getCachedJSONObject("jsonMovie", MOVIE_ID, TmdbVideoContent.class);
         assertThat(movieFromCache).isPresent();
         assertThat(movieFromCache.get()).isEqualTo(cachedMovie);
     }
@@ -175,12 +181,12 @@ public class RedisCacheTest {
         when(tmdbApi.getTvSeries()).thenReturn(tmdbTvSeries);
         when(tmdbTvSeries.getDetails(TV_ID, null, TvSeriesAppendToResponse.ALTERNATIVE_TITLES, TvSeriesAppendToResponse.EXTERNAL_IDS, TvSeriesAppendToResponse.KEYWORDS, TvSeriesAppendToResponse.RECOMMENDATIONS)).thenReturn(tvSeriesDb);
 
-        TvSeriesDb tvNotCached = tmdbClient.parseShowById(TV_ID);
-        TvSeriesDb cachedTv = tmdbClient.parseShowById(TV_ID);
+        TmdbVideoContent tvNotCached = tmdbClient.parseShowById(TV_ID);
+        TmdbVideoContent cachedTv = tmdbClient.parseShowById(TV_ID);
 
         assertThat(tvNotCached).isEqualTo(cachedTv);
         verify(tmdbApi, times(1)).getTvSeries();
-        Optional<TvSeriesDb> tvFromCache = getCachedJSONObject("jsonShow", TV_ID, TvSeriesDb.class);
+        Optional<TmdbVideoContent> tvFromCache = getCachedJSONObject("jsonShow", TV_ID, TmdbVideoContent.class);
         assertThat(tvFromCache).isPresent();
         assertThat(tvFromCache.get()).isEqualTo(cachedTv);
     }

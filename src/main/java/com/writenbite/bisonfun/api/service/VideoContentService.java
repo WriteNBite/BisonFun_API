@@ -10,11 +10,12 @@ import com.writenbite.bisonfun.api.client.anilist.mapper.AniListMediaTitleMapper
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMedia;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaFormat;
 import com.writenbite.bisonfun.api.client.anilist.types.AniListPage;
+import com.writenbite.bisonfun.api.client.tmdb.TmdbAnimeChecker;
 import com.writenbite.bisonfun.api.client.tmdb.TmdbClient;
-import com.writenbite.bisonfun.api.client.tmdb.mapper.MovieDbMapper;
-import com.writenbite.bisonfun.api.client.tmdb.mapper.TvSeriesDbMapper;
-import com.writenbite.bisonfun.api.client.tmdb.types.TmdbMovie;
-import com.writenbite.bisonfun.api.client.tmdb.types.TmdbTvSeries;
+import com.writenbite.bisonfun.api.client.tmdb.mapper.TmdbVideoContentMapper;
+import com.writenbite.bisonfun.api.client.tmdb.types.TmdbSimpleVideoContent;
+import com.writenbite.bisonfun.api.client.tmdb.types.TmdbVideoContent;
+import com.writenbite.bisonfun.api.client.tmdb.types.TmdbVideoContentResultsPage;
 import com.writenbite.bisonfun.api.database.entity.UserVideoContent;
 import com.writenbite.bisonfun.api.database.entity.VideoContent;
 import com.writenbite.bisonfun.api.database.entity.VideoContentCategory;
@@ -29,15 +30,7 @@ import com.writenbite.bisonfun.api.types.Connection;
 import com.writenbite.bisonfun.api.types.PageInfo;
 import com.writenbite.bisonfun.api.types.videocontent.VideoContentFormat;
 import com.writenbite.bisonfun.api.types.mapper.VideoContentFormatMapper;
-import info.movito.themoviedbapi.model.core.Movie;
-import info.movito.themoviedbapi.model.core.MovieResultsPage;
-import info.movito.themoviedbapi.model.core.TvSeries;
-import info.movito.themoviedbapi.model.core.TvSeriesResultsPage;
-import info.movito.themoviedbapi.model.keywords.Keyword;
-import info.movito.themoviedbapi.model.movies.MovieDb;
-import info.movito.themoviedbapi.model.tv.series.TvSeriesDb;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
@@ -58,8 +51,7 @@ public class VideoContentService {
     private final static String IMDB_ID_DEFAULT = "";
     private final static int MAL_ID_DEFAULT = -1;
     private final AniListMediaMapper aniListMediaMapper;
-    private final MovieDbMapper movieDbMapper;
-    private final TvSeriesDbMapper tvSeriesDbMapper;
+    private final TmdbVideoContentMapper tmdbVideoContentMapper;
 
     @Value("${bisonfun.data-update.range-in-days}")
     private Integer dayRange;
@@ -77,7 +69,7 @@ public class VideoContentService {
     @Autowired
     public VideoContentService(VideoContentRepository videoContentRepository, TmdbClient tmdbClient, AniListClient aniListClient, VideoContentMapper videoContentMapper, AniListMediaTitleMapper aniListMediaTitleMapper,
                                VideoContentFormatMapper videoContentFormatMapper,
-                               VideoContentCompilationMapper videoContentCompilationMapper, RawVideoContentFactory rawVideoContentFactory, VideoContentTypeMapper videoContentTypeMapper, AniListMediaMapper aniListMediaMapper, MovieDbMapper movieDbMapper, TvSeriesDbMapper tvSeriesDbMapper) {
+                               VideoContentCompilationMapper videoContentCompilationMapper, RawVideoContentFactory rawVideoContentFactory, VideoContentTypeMapper videoContentTypeMapper, AniListMediaMapper aniListMediaMapper, TmdbVideoContentMapper tmdbVideoContentMapper) {
         this.videoContentRepository = videoContentRepository;
         this.tmdbClient = tmdbClient;
         this.aniListClient = aniListClient;
@@ -88,8 +80,7 @@ public class VideoContentService {
         this.rawVideoContentFactory = rawVideoContentFactory;
         this.videoContentTypeMapper = videoContentTypeMapper;
         this.aniListMediaMapper = aniListMediaMapper;
-        this.movieDbMapper = movieDbMapper;
-        this.tvSeriesDbMapper = tvSeriesDbMapper;
+        this.tmdbVideoContentMapper = tmdbVideoContentMapper;
     }
 
     public Connection<com.writenbite.bisonfun.api.types.videocontent.VideoContent.BasicInfo> search(
@@ -106,30 +97,21 @@ public class VideoContentService {
         List<com.writenbite.bisonfun.api.types.videocontent.VideoContent.BasicInfo> searchResult = new ArrayList<>();
         switch (category) {
             case MAINSTREAM -> {
+                List<TmdbVideoContentResultsPage> searchResults = new ArrayList<>();
                 if (formats.contains(VideoContentFormat.MOVIE)) {
-                    MovieResultsPage movies;
-                    movies = tmdbClient.parseMovieList(query, page);
-                    totalPages = Math.max(totalPages, movies.getTotalPages());
-                    totalResults += movies.getTotalResults();
-
-                    Map<Movie, VideoContent> movieMediaVideoContentMap = getMovieVideoContentMap(movies.getResults());
-                    searchResult.addAll(movieMediaVideoContentMap.keySet()
-                            .stream()
-                            .map(movie -> rawVideoContentFactory.toBasicInfo(new TmdbMovie(movie), movieMediaVideoContentMap.getOrDefault(movie, null)))
-                            .toList());
+                    searchResults.add(tmdbClient.parseMovieList(query, page));
                 }
                 if (formats.contains(VideoContentFormat.TV)) {
-                    TvSeriesResultsPage tvs;
-                    tvs = tmdbClient.parseTVList(query, page);
-                    totalPages = Math.max(totalPages, tvs.getTotalPages());
-                    totalResults += tvs.getTotalResults();
-
-                    Map<TvSeries, VideoContent> tvMediaVideoContentMap = getTvSeriesVideoContentMap(tvs.getResults());
-                    searchResult.addAll(tvMediaVideoContentMap.keySet()
-                            .stream()
-                            .map(tvSeries -> rawVideoContentFactory.toBasicInfo(new TmdbTvSeries(tvSeries), tvMediaVideoContentMap.getOrDefault(tvSeries, null)))
-                            .toList());
+                    searchResults.add(tmdbClient.parseTVList(query, page));
                 }
+                totalPages = Math.max(totalPages, searchResults.stream().mapToInt(TmdbVideoContentResultsPage::totalPages).max().orElse(0));
+                totalResults += searchResults.stream().mapToInt(TmdbVideoContentResultsPage::totalResults).sum();
+
+                Map<TmdbSimpleVideoContent, Optional<VideoContent>> movieMediaVideoContentMap = getTmdbVideoContentMap(searchResults.stream().flatMap(result -> result.results().stream()).toList());
+                searchResult.addAll(movieMediaVideoContentMap.keySet()
+                        .stream()
+                        .map(movie -> rawVideoContentFactory.toBasicInfo(movie, movieMediaVideoContentMap.getOrDefault(movie, null).orElse(null)))
+                        .toList());
                 perPage = searchResult.size();
                 hasNextPage = page < totalPages;
             }
@@ -184,10 +166,8 @@ public class VideoContentService {
             }
             if (compilation.aniListMedia() != null) {
                 externalInfo = aniListMediaMapper.toExternalInfo(compilation.aniListMedia());
-            } else if (compilation.movieDb() != null) {
-                externalInfo = movieDbMapper.toExternalInfo(compilation.movieDb());
-            } else if (compilation.tvSeriesDb() != null) {
-                externalInfo = tvSeriesDbMapper.toExternalInfo(compilation.tvSeriesDb());
+            } else if (compilation.tmdbVideoContent() != null) {
+                externalInfo = tmdbVideoContentMapper.toExternalInfo(compilation.tmdbVideoContent());
             }
         }
         return new com.writenbite.bisonfun.api.types.videocontent.VideoContent(basicInfo, externalInfo);
@@ -277,7 +257,7 @@ public class VideoContentService {
             return getOrCreateVideoContent(fetchedInput);
         }
 
-        VideoContent videoContent = rawVideoContentFactory.toVideoContentDb(fetchedContent.aniListMedia(), fetchedContent.movieDb(), fetchedContent.tvSeriesDb());
+        VideoContent videoContent = rawVideoContentFactory.toVideoContentDb(fetchedContent.aniListMedia(), fetchedContent.tmdbVideoContent());
         return saveVideoContent(videoContent);
     }
 
@@ -291,7 +271,7 @@ public class VideoContentService {
      */
     private VideoContent fetchAndUpdateVideoContent(VideoContentIdInput input) throws ContentNotFoundException, TooManyAnimeRequestsException {
         VideoContentCompilation fetchedContent = fetchVideoContent(input);
-        VideoContent videoContent = rawVideoContentFactory.toVideoContentDb(fetchedContent.aniListMedia(), fetchedContent.movieDb(), fetchedContent.tvSeriesDb());
+        VideoContent videoContent = rawVideoContentFactory.toVideoContentDb(fetchedContent.aniListMedia(), fetchedContent.tmdbVideoContent());
         return updateContent(videoContent).orElseThrow(() -> new ContentNotFoundException("Can't find video content by input: " + input));
     }
 
@@ -363,43 +343,39 @@ public class VideoContentService {
      */
     private void updateTmdbId(VideoContent videoContent) throws ContentNotFoundException, JsonProcessingException {
         int tmdbId = TMDB_ID_DEFAULT;
+        TmdbSimpleVideoContent tmdbVideoContent = null;
         if (videoContent.getType() == MOVIE) {
-            MovieDb movie = tmdbClient.parseTmdbMovieByName(videoContent.getTitle(), videoContent.getYear());
-            if(isConflictingContent(videoContent.getTitle(), movie.getTitle())) {
-               throw new ContentNotFoundException();
-            }
-            tmdbId = movie.getId();
+            tmdbVideoContent = tmdbClient.parseTmdbMovieByName(videoContent.getTitle(), videoContent.getYear());
         } else if (videoContent.getType() == TV) {
-            TvSeriesDb tv = tmdbClient.parseTmdbTvByName(videoContent.getTitle(), videoContent.getYear());
-            if(isConflictingContent(videoContent.getTitle(), tv.getName()) || isConflictingContent(videoContent.getTitle(), tv.getOriginalName())){
-               throw new ContentNotFoundException();
-            }
-            tmdbId = tv.getId();
+            tmdbVideoContent = tmdbClient.parseTmdbTvByName(videoContent.getTitle(), videoContent.getYear());
         }
+
+        if(tmdbVideoContent == null || isConflictingContent(videoContent.getTitle(), tmdbVideoContent.getTitle()) || isConflictingContent(videoContent.getTitle(), tmdbVideoContent.getOriginalTitle())){
+            throw new ContentNotFoundException();
+        }
+        tmdbId = tmdbVideoContent.getTmdbId();
         videoContent.setTmdbId(tmdbId);
     }
 
     /**
      * @param videoContent video content from database which need imdb id to be checked
      * @throws ContentNotFoundException proper content couldn't be found on themoviedb
-     * @throws JsonProcessingException when response from themoviedb couldn't be properly mapped
      * @see #isConflictingContent(String, String)
      */
-    private void updateImdbId(VideoContent videoContent) throws JsonProcessingException, ContentNotFoundException {
+    private void updateImdbId(VideoContent videoContent) throws ContentNotFoundException {
         String imdbId = IMDB_ID_DEFAULT;
-        if (videoContent.getType() == MOVIE) {
-            MovieDb movie = isNotNullAndPositive(videoContent.getTmdbId()) ? tmdbClient.parseMovieById(videoContent.getTmdbId()) : tmdbClient.parseTmdbMovieByName(videoContent.getTitle(), videoContent.getYear());
-            if (isConflictingContent(videoContent.getTitle(), movie.getTitle())) {
-                throw new ContentNotFoundException();
+        TmdbVideoContent tmdbVideoContent = null;
+        if(isNotNullAndPositive(videoContent.getTmdbId())) {
+            if (videoContent.getType() == MOVIE) {
+                tmdbVideoContent = tmdbClient.parseMovieById(videoContent.getTmdbId());
+            } else if (videoContent.getType() == TV) {
+                tmdbVideoContent = tmdbClient.parseShowById(videoContent.getTmdbId());
             }
-            imdbId = movie.getImdbID() != null ? movie.getImdbID() : imdbId;
-        } else if (videoContent.getType() == TV) {
-            TvSeriesDb tv = isNotNullAndPositive(videoContent.getTmdbId()) ? tmdbClient.parseShowById(videoContent.getTmdbId()) : tmdbClient.parseTmdbTvByName(videoContent.getTitle(), videoContent.getYear());
-            if(isConflictingContent(videoContent.getTitle(), tv.getName()) || isConflictingContent(videoContent.getTitle(), tv.getOriginalName())){
-                throw new ContentNotFoundException();
-            }
-            imdbId = tv.getExternalIds() != null ? tv.getExternalIds().getImdbId() : null;
         }
+        if(tmdbVideoContent == null || isConflictingContent(videoContent.getTitle(), tmdbVideoContent.getTitle()) || isConflictingContent(videoContent.getTitle(), tmdbVideoContent.getOriginalTitle())){
+            throw new ContentNotFoundException();
+        }
+        imdbId = tmdbVideoContent.getImdbId().orElse(null);
         videoContent.setImdbId(imdbId);
     }
 
@@ -471,15 +447,14 @@ public class VideoContentService {
      * @see #isNotNullAndPositive(Number)
      * @see #fetchTmdbContent(TmdbIdInput)
      * @see #fetchTmdbContentFromAnime(AniListMedia)
-     * @see #isTmdbContentAnime(MovieDb, TvSeriesDb)
+     * @see com.writenbite.bisonfun.api.client.tmdb.TmdbAnimeChecker#isTmdbContentAnime(TmdbVideoContent)
      * @see #isConflictingContent(AniListMedia, String)
      */
     public VideoContentCompilation fetchVideoContent(VideoContentIdInput input) throws ContentNotFoundException, TooManyAnimeRequestsException {
         VideoContent videoContentDb = null;
         AniListMedia anime = null;
-        Pair<MovieDb, TvSeriesDb> tmdbContent = Pair.of(null, null);
-        MovieDb movieDb;
-        TvSeriesDb tvSeriesDb;
+        TmdbVideoContent tmdbContent = null;
+        boolean isContentAnime = false;
         Integer aniListId = input.aniListId();
         Integer tmdbId = input.tmdbIdInput() != null ? input.tmdbIdInput().tmdbId() : null;
         VideoContentFormat format = input.tmdbIdInput() != null ? input.tmdbIdInput().format() : VideoContentFormat.UNKNOWN;
@@ -497,15 +472,13 @@ public class VideoContentService {
         }
 
         if (tmdbId != null) {
-            tmdbContent = fetchTmdbContent(new TmdbIdInput(tmdbId, format));
+            tmdbContent = fetchTmdbContent(new TmdbIdInput(tmdbId, format)).orElse(null);
         } else if (anime != null) {
-            tmdbContent = fetchTmdbContentFromAnime(anime);
+            tmdbContent = fetchTmdbContentFromAnime(anime).orElse(null);
         }
-        movieDb = tmdbContent.getLeft();
-        tvSeriesDb = tmdbContent.getRight();
 
-        if (isTmdbContentAnime(movieDb, tvSeriesDb)) {
-            String tmdbTitle = movieDb != null ? movieDb.getTitle() : tvSeriesDb.getName();
+        if (TmdbAnimeChecker.isTmdbContentAnime(tmdbContent)) {
+            String tmdbTitle = tmdbContent.getTitle();
             if (anime == null) {
                 try {
                     anime = aniListClient.parseAnimeByName(tmdbTitle);
@@ -518,48 +491,50 @@ public class VideoContentService {
             }
         }
 
-        return new VideoContentCompilation(videoContentDb, anime, movieDb, tvSeriesDb);
+        return new VideoContentCompilation(videoContentDb, anime, tmdbContent);
     }
 
     /**
      * @param tmdbIdInput record class which contains id of themoviedb and type of content
      * @return tmdb content pair of movie and tv series
      */
-    private Pair<MovieDb, TvSeriesDb> fetchTmdbContent(TmdbIdInput tmdbIdInput) throws ContentNotFoundException {
-        MovieDb movie = null;
-        TvSeriesDb tv = null;
+    private Optional<TmdbVideoContent> fetchTmdbContent(TmdbIdInput tmdbIdInput) throws ContentNotFoundException {
         if(tmdbIdInput.format() == VideoContentFormat.MOVIE){
-            movie = tmdbClient.parseMovieById(tmdbIdInput.tmdbId());
+            return Optional.ofNullable(tmdbClient.parseMovieById(tmdbIdInput.tmdbId()));
         } else if (tmdbIdInput.format() == VideoContentFormat.TV) {
-            tv = tmdbClient.parseShowById(tmdbIdInput.tmdbId());
+            return Optional.ofNullable(tmdbClient.parseShowById(tmdbIdInput.tmdbId()));
         }
-        return Pair.of(movie, tv);
+        return Optional.empty();
     }
 
     /**
      * @param anime record class response from anilist
      * @return tmdb content pair of movie and tv series
      */
-    private Pair<MovieDb, TvSeriesDb> fetchTmdbContentFromAnime(AniListMedia anime){
-        MovieDb movie = null;
-        TvSeriesDb tv = null;
+    private Optional<TmdbVideoContent> fetchTmdbContentFromAnime(AniListMedia anime){
+        TmdbSimpleVideoContent tmdbSimpleVideoContent = null;
         try {
             VideoContentType videoContentType = videoContentTypeMapper.fromAniListMediaFormat(anime.format());
+            Integer year = anime.startDate() != null ? anime.startDate().year() : null;
             if (videoContentType == MOVIE) {
-                movie = tmdbClient.parseTmdbMovieByName(
+                 tmdbSimpleVideoContent = tmdbClient.parseTmdbMovieByName(
                         aniListMediaTitleMapper.animeEnglishTitle(anime.title()),
-                        anime.startDate() != null ? anime.startDate().year() : null
+                        year
                 );
             } else if (videoContentType == TV) {
-                tv = tmdbClient.parseTmdbTvByName(
+                tmdbSimpleVideoContent = tmdbClient.parseTmdbTvByName(
                         aniListMediaTitleMapper.animeEnglishTitle(anime.title()),
-                        anime.startDate() != null ? anime.startDate().year() : null
+                        year
                 );
             }
-        } catch (JsonProcessingException | ContentNotFoundException e) {
+
+            if(tmdbSimpleVideoContent != null && isNotNullAndPositive(tmdbSimpleVideoContent.getTmdbId())){
+                return fetchTmdbContent(new TmdbIdInput(tmdbSimpleVideoContent.getTmdbId(), videoContentFormatMapper.fromVideoContentType(tmdbSimpleVideoContent.getVideoContentType())));
+            }
+        } catch (ContentNotFoundException e) {
             log.error(e.getMessage());
         }
-        return Pair.of(movie, tv);
+        return Optional.empty();
     }
 
     /**
@@ -577,27 +552,6 @@ public class VideoContentService {
 
     private boolean isConflictingContent(String originalTitle, String sideTitle){
         return !originalTitle.equalsIgnoreCase(sideTitle);
-    }
-
-    /**
-     * @param movieDb response class from themoviedb about movies
-     * @param tvSeriesDb response class from themoviedb about tv shows
-     * @return <code>true</code> if one of the tmdb content exist and have 'Anime' keyword and <code>false</code> otherwise
-     * @see #animeKeywordCheck(List)
-     */
-    private boolean isTmdbContentAnime(MovieDb movieDb, TvSeriesDb tvSeriesDb){
-        return ((movieDb != null && movieDb.getKeywords() != null && animeKeywordCheck(movieDb.getKeywords().getKeywords())) || (tvSeriesDb != null && tvSeriesDb.getKeywords() != null && animeKeywordCheck(tvSeriesDb.getKeywords().getResults())));
-    }
-
-    /**
-     * @param keywords list of keywords from tmdb content
-     * @return <code>true</code> if list of keywords contains 'anime' keyword
-     */
-    private boolean animeKeywordCheck(List<Keyword> keywords){
-        if (!keywords.isEmpty()) {
-            return keywords.stream().anyMatch(keyword -> "anime".equalsIgnoreCase(keyword.getName()));
-        }
-        return false;
     }
 
     /**
@@ -733,50 +687,61 @@ public class VideoContentService {
         return animeVideoContentMap;
     }
 
-    private Map<Movie, VideoContent> getMovieVideoContentMap(List<Movie> movies) {
-        Map<Integer, Movie> movieIds = movies.stream()
-                .collect(Collectors.toMap(
-                        Movie::getId,
-                        Function.identity(),
-                        (existing, replacement) -> existing
-                ));
-        List<VideoContent> movieVideoContent = videoContentRepository.findListByTmdbIdsAndType(movieIds.keySet(), MOVIE);
-        Map<Integer, VideoContent> movieMap = movieVideoContent.stream()
-                .collect(
-                        Collectors.toMap(
-                                VideoContent::getTmdbId,
-                                Function.identity(),
-                                (existing, replacement) -> existing
+    private Map<TmdbSimpleVideoContent, Optional<VideoContent>> getTmdbVideoContentMap(List<TmdbSimpleVideoContent> tmdbList){
+        Map<VideoContentType, Set<TmdbSimpleVideoContent>> typeSetMap = tmdbList.stream()
+                .collect(Collectors.groupingBy(
+                                TmdbSimpleVideoContent::getVideoContentType,
+                                Collectors.toSet()
                         )
                 );
-        Map<Movie, VideoContent> movieVideoContentMap = new HashMap<>();
-        for (Integer tmdbId : movieIds.keySet()) {
-            movieVideoContentMap.put(movieIds.get(tmdbId), movieMap.getOrDefault(tmdbId, null));
+        Map<TmdbSimpleVideoContent, Optional<VideoContent>> videoContentMap = new HashMap<>();
+        for(Map.Entry<VideoContentType, Set<TmdbSimpleVideoContent>> typeSet : typeSetMap.entrySet()){
+            Map<TmdbSimpleVideoContent, Optional<VideoContent>> map = getTmdbTypedVideoContentMap(typeSet.getValue(), typeSet.getKey());
+            videoContentMap.putAll(
+                    map.entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+            );
         }
-        return movieVideoContentMap;
+        return videoContentMap;
     }
 
-    private Map<TvSeries, VideoContent> getTvSeriesVideoContentMap(List<TvSeries> tvs) {
-        Map<Integer, TvSeries> tvIds = tvs.stream()
+    private Map<TmdbSimpleVideoContent, Optional<VideoContent>> getTmdbTypedVideoContentMap(Collection<TmdbSimpleVideoContent> tmdbList, VideoContentType videoContentType) {
+        if(tmdbList == null){
+            return Collections.emptyMap();
+        }
+
+        // Collect tmdbIds from tmdbList, ensuring no null ids
+        Map<Integer, TmdbSimpleVideoContent> tmdbIds = tmdbList.stream()
                 .collect(Collectors.toMap(
-                        TvSeries::getId,
+                        TmdbSimpleVideoContent::getTmdbId,
                         Function.identity(),
                         (existing, replacement) -> existing
                 ));
-        List<VideoContent> tvVideoContent = videoContentRepository.findListByTmdbIdsAndType(tvIds.keySet(), TV);
-        Map<Integer, VideoContent> tvMap = tvVideoContent.stream()
-                .collect(
-                        Collectors.toMap(
-                                VideoContent::getTmdbId,
-                                Function.identity(),
-                                (existing, replacement) -> existing
-                        )
-                );
-        Map<TvSeries, VideoContent> tvVideoContentMap = new HashMap<>();
-        for (Integer tmdbId : tvIds.keySet()) {
-            tvVideoContentMap.put(tvIds.get(tmdbId), tvMap.getOrDefault(tmdbId, null));
+
+        // Fetch VideoContent list from repository
+        List<VideoContent> tmdbTypedVideoContentList = videoContentRepository.findListByTmdbIdsAndType(tmdbIds.keySet(), videoContentType);
+
+        // Null check for tmdbTypedVideoContentList, assuming it returns empty list if no data
+        if(tmdbTypedVideoContentList == null){
+            tmdbTypedVideoContentList = Collections.emptyList();
         }
-        return tvVideoContentMap;
+
+        // Create a map from tmdbId to VideoContent
+        Map<Integer, VideoContent> idVideoContentMap = tmdbTypedVideoContentList.stream()
+                .collect(Collectors.toMap(
+                        VideoContent::getTmdbId,
+                        Function.identity(),
+                        (existing, replacement) -> existing
+                ));
+
+        // Create the final map from TmdbSimpleVideoContent to VideoContent
+        Map<TmdbSimpleVideoContent, Optional<VideoContent>> tmdbSimpleVideoContentMap = new HashMap<>();
+        for (Integer tmdbId : tmdbIds.keySet()) {
+            TmdbSimpleVideoContent tmdbSimpleVideoContent = tmdbIds.get(tmdbId);
+            Optional<VideoContent> optionalVideoContent = Optional.ofNullable(idVideoContentMap.getOrDefault(tmdbId, null));
+            tmdbSimpleVideoContentMap.put(tmdbSimpleVideoContent, optionalVideoContent);
+        }
+        return tmdbSimpleVideoContentMap;
     }
 
     public List<com.writenbite.bisonfun.api.types.videocontent.VideoContent.BasicInfo> getAnimeTrends() throws ContentNotFoundException {
@@ -796,32 +761,33 @@ public class VideoContentService {
     }
 
     public List<com.writenbite.bisonfun.api.types.videocontent.VideoContent.BasicInfo> getMovieTrends() throws ContentNotFoundException {
-        MovieResultsPage movieTrends = null;
+        TmdbVideoContentResultsPage movieTrends;
         try {
             movieTrends = tmdbClient.parseMovieTrends();
         } catch (NoAccessException e) {
             log.error(e.getMessage());
             throw new ContentNotFoundException();
         }
-        Map<Movie, VideoContent> movieMediaVideoContentMap = getMovieVideoContentMap(movieTrends.getResults());
+        Map<TmdbSimpleVideoContent, Optional<VideoContent>> movieMediaVideoContentMap = getTmdbTypedVideoContentMap(movieTrends.results(), MOVIE);
+
         return movieMediaVideoContentMap.keySet()
                 .stream()
-                .map(movie -> rawVideoContentFactory.toBasicInfo(movieMediaVideoContentMap.getOrDefault(movie, null), new TmdbMovie(movie)))
+                .map(movie -> rawVideoContentFactory.toBasicInfo(movieMediaVideoContentMap.get(movie).orElse(null), movie))
                 .collect(Collectors.toList());
     }
 
     public List<com.writenbite.bisonfun.api.types.videocontent.VideoContent.BasicInfo> getTvTrends() throws ContentNotFoundException {
-        TvSeriesResultsPage tvTrends;
+        TmdbVideoContentResultsPage tvTrends;
         try {
             tvTrends = tmdbClient.parseTVTrends();
         } catch (NoAccessException e) {
             log.error(e.getMessage());
             throw new ContentNotFoundException();
         }
-        Map<TvSeries, VideoContent> tvMediaVideoContentMap = getTvSeriesVideoContentMap(tvTrends.getResults());
+        Map<TmdbSimpleVideoContent, Optional<VideoContent>> tvMediaVideoContentMap = getTmdbTypedVideoContentMap(tvTrends.results(), TV);
         return tvMediaVideoContentMap.keySet()
                 .stream()
-                .map(tvSeries -> rawVideoContentFactory.toBasicInfo(tvMediaVideoContentMap.getOrDefault(tvSeries, null), new TmdbTvSeries(tvSeries)))
+                .map(tvSeries -> rawVideoContentFactory.toBasicInfo(tvMediaVideoContentMap.get(tvSeries).orElse(null), tvSeries))
                 .collect(Collectors.toList());
     }
 }
