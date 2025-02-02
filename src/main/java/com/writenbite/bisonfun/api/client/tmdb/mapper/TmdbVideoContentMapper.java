@@ -43,7 +43,7 @@ public interface TmdbVideoContentMapper {
 
     default com.writenbite.bisonfun.api.database.entity.VideoContent toVideoContentDb(TmdbVideoContent content) {
         com.writenbite.bisonfun.api.database.entity.VideoContent entity = new com.writenbite.bisonfun.api.database.entity.VideoContent();
-        entity.setCategory(tmdbMapper.toEntityCategory(content.getKeywords()));
+        entity.setCategory(tmdbMapper.toEntityCategory(content));
         entity.setImdbId(content.getImdbId().orElse(null));
         entity.setPoster(content.getPosterPath());
         entity.setTitle(content.getTitle());

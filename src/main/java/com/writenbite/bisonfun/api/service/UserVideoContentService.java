@@ -2,7 +2,6 @@ package com.writenbite.bisonfun.api.service;
 
 import com.writenbite.bisonfun.api.client.*;
 import com.writenbite.bisonfun.api.client.anilist.AniListClient;
-import com.writenbite.bisonfun.api.client.anilist.TooManyAnimeRequestsException;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaStatus;
 import com.writenbite.bisonfun.api.client.tmdb.TmdbClient;
 import com.writenbite.bisonfun.api.database.entity.*;
@@ -10,6 +9,7 @@ import com.writenbite.bisonfun.api.database.mapper.VideoContentCategoryMapper;
 import com.writenbite.bisonfun.api.database.mapper.VideoContentMapper;
 import com.writenbite.bisonfun.api.database.repository.UserVideoContentPageableRepository;
 import com.writenbite.bisonfun.api.database.repository.UserVideoContentRepository;
+import com.writenbite.bisonfun.api.service.external.TooManyAnimeRequestsException;
 import com.writenbite.bisonfun.api.types.*;
 import com.writenbite.bisonfun.api.types.mapper.UserVideoContentListElementMapper;
 import com.writenbite.bisonfun.api.types.mapper.UserVideoContentListStatusMapper;
@@ -139,7 +139,7 @@ public class UserVideoContentService {
 
         Pageable pageable = PageRequest.of(page - 1, 20, Sort.by("statusStage"));
         Page<UserVideoContent> result = userVideoContentPageableRepository.findUserVideoContent(userId, input.episode(), queryScore, statuses.isEmpty() ? null : statuses, categories.isEmpty() ? null : categories, types.isEmpty() ? null : types, input.yearFrom(), input.yearTo(), pageable);
-        PageInfo pageInfo = new PageInfo((int) result.getTotalElements(), result.getNumberOfElements(), result.getNumber() + 1, result.getTotalPages(), result.hasNext());
+        PageInfo pageInfo = new PageInfo.PageInfoBuilder().increaseTotal((int) result.getTotalElements()).setPerPage(result.getNumberOfElements()).setCurrentPageIfLess(result.getNumber() + 1).setLastPageIfGreater(result.getTotalPages()).setHasNextPage(result.hasNext()).createPageInfo();
         List<UserVideoContentListElement> userVideoContentListElements = userVideoContentListElementMapper.fromEntities(result.getContent());
         return new UserVideoContentListConnection(userVideoContentListElements, pageInfo);
     }
@@ -245,12 +245,12 @@ public class UserVideoContentService {
         if (input.aniListId() != null) {
             optionalUserVideoContent = optionalUserVideoContent.isEmpty() ? userVideoContentRepository.findById_UserIdAndVideoContent_AniListId(userId, input.aniListId()) : optionalUserVideoContent;
         }
-        if (input.tmdbIdInput() != null) {
+        if (input.tmdbVideoContentIdInput() != null) {
             optionalUserVideoContent = optionalUserVideoContent.isEmpty() ?
                     userVideoContentRepository.findById_UserIdAndVideoContent_TmdbIdAndVideoContent_Type(
                             userId,
-                            input.tmdbIdInput().tmdbId(),
-                            formatMapper.toVideoContentType(input.tmdbIdInput().format())
+                            input.tmdbVideoContentIdInput().tmdbId(),
+                            formatMapper.toVideoContentType(input.tmdbVideoContentIdInput().format())
                     )
                     : optionalUserVideoContent;
         }

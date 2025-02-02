@@ -1,4 +1,4 @@
-package com.writenbite.bisonfun.api.client.anilist;
+package com.writenbite.bisonfun.api.service.external;
 
 import lombok.Getter;
 import lombok.Setter;

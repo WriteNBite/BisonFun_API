@@ -7,6 +7,7 @@ import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMedia;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaFormat;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaPage;
 import com.writenbite.bisonfun.api.client.anilist.types.AniListPage;
+import com.writenbite.bisonfun.api.service.external.TooManyAnimeRequestsException;
 import kong.unirest.core.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

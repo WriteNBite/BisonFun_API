@@ -21,7 +21,15 @@ public class UserVideoContentListConnectionConfig {
         List<UserVideoContentListElement> userList = getMovies().stream()
                 .map(movie -> new UserVideoContentListElement(user, movie, random.nextInt(11), random.nextInt(11), UserVideoContentListStatus.values()[random.nextInt(UserVideoContentListStatus.values().length)]))
                 .toList();
-        return new UserVideoContentListConnection(userList, new PageInfo(userList.size(), userList.size(), 1, 1, false));
+        return new UserVideoContentListConnection(
+                userList,
+                new PageInfo.PageInfoBuilder()
+                        .increaseTotal(userList.size())
+                        .setPerPage(userList.size())
+                        .setCurrentPageIfLess(1)
+                        .setLastPageIfGreater(1)
+                        .createPageInfo()
+        );
     }
 
     private static List<VideoContent.BasicInfo> getMovies() {

@@ -94,7 +94,7 @@ enum VideoContentCategory {
 input VideoContentIdInput{
     videoContentId: Long
     aniListId: Int
-    tmdbIdInput: TmdbIdInput
+    tmdbVideoContentIdInput: TmdbIdInput
 }
 
 input TmdbIdInput{

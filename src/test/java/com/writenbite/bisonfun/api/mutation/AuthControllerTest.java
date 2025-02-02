@@ -70,8 +70,8 @@ public class AuthControllerTest {
                 .hasValue()
                 .entity(String.class)
                 .get();
-        assertEquals(jwtService.getHolder(accessToken).extractTokenType(), TokenType.ACCESS);
-        assertEquals(jwtService.getHolder(refreshToken).extractTokenType(), TokenType.REFRESH);
+        assertEquals(TokenType.ACCESS, jwtService.getHolder(accessToken).extractTokenType());
+        assertEquals(TokenType.REFRESH, jwtService.getHolder(refreshToken).extractTokenType());
     }
 
     @Test

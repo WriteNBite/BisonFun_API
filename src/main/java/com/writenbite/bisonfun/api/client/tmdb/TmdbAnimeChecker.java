@@ -9,18 +9,22 @@ public class TmdbAnimeChecker {
 
     /**
      * @param content response class from themoviedb
-     * @return <code>true</code> if one of the tmdb content exist and have 'Anime' keyword and <code>false</code> otherwise
+     * @return <code>true</code> if one of the tmdb content exist and have 'Anime' keyword or contains 'anime' in description and <code>false</code> otherwise
      * @see #animeKeywordCheck(List)
      */
     public static boolean isTmdbContentAnime(TmdbVideoContent content) {
-        return content != null && content.getKeywords() != null && animeKeywordCheck(content.getKeywords());
+        return content != null &&
+                (
+                (content.getKeywords() != null && animeKeywordCheck(content.getKeywords())) ||
+                        (content.getOverview() != null && content.getOverview().toLowerCase().contains("anime"))
+                );
     }
 
     /**
      * @param keywords list of keywords from tmdb content
      * @return <code>true</code> if list of keywords contains 'anime' keyword
      */
-    public static boolean animeKeywordCheck(List<Keyword> keywords){
+    private static boolean animeKeywordCheck(List<Keyword> keywords){
         if (!keywords.isEmpty()) {
             return keywords.stream().anyMatch(keyword -> "anime".equalsIgnoreCase(keyword.getName()));
         }

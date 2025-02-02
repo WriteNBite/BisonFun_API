@@ -4,7 +4,7 @@ import com.writenbite.bisonfun.api.client.ContentNotFoundException;
 import com.writenbite.bisonfun.api.client.NoAccessException;
 import com.writenbite.bisonfun.api.client.anilist.AniListApiResponse;
 import com.writenbite.bisonfun.api.client.anilist.AniListClient;
-import com.writenbite.bisonfun.api.client.anilist.TooManyAnimeRequestsException;
+import com.writenbite.bisonfun.api.service.external.TooManyAnimeRequestsException;
 import com.writenbite.bisonfun.api.client.anilist.types.AniListPage;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMedia;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaPage;

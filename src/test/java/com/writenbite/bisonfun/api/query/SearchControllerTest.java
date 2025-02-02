@@ -1,10 +1,15 @@
 package com.writenbite.bisonfun.api.query;
 
-import com.writenbite.bisonfun.api.client.ContentNotFoundException;
+import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMedia;
+import com.writenbite.bisonfun.api.client.tmdb.types.TmdbVideoContent;
 import com.writenbite.bisonfun.api.config.GraphQlConfig;
 import com.writenbite.bisonfun.api.config.MapperConfig;
 import com.writenbite.bisonfun.api.controller.VideoContentController;
+import com.writenbite.bisonfun.api.service.external.AnimeService;
+import com.writenbite.bisonfun.api.service.external.MainstreamService;
+import com.writenbite.bisonfun.api.service.external.TooManyAnimeRequestsException;
 import com.writenbite.bisonfun.api.service.VideoContentService;
+import com.writenbite.bisonfun.api.service.search.VideoContentSearchService;
 import com.writenbite.bisonfun.api.types.Connection;
 import com.writenbite.bisonfun.api.types.PageInfo;
 import com.writenbite.bisonfun.api.types.videocontent.*;
@@ -28,8 +33,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @GraphQlTest(VideoContentController.class)
@@ -41,6 +45,12 @@ public class SearchControllerTest {
 
     @MockBean
     private VideoContentService videoContentService;
+    @MockBean
+    private VideoContentSearchService videoContentSearchService;
+    @MockBean
+    private AnimeService<AniListMedia, com.writenbite.bisonfun.api.database.entity.VideoContent> animeService;
+    @MockBean
+    private MainstreamService<TmdbVideoContent, com.writenbite.bisonfun.api.database.entity.VideoContent, AniListMedia> mainstreamService;
 
     private String mainstreamSearch;
     private String animeSearch;
@@ -57,10 +67,10 @@ public class SearchControllerTest {
         animeSearch = new String(Files.readAllBytes(Paths.get(animeSearchQueryResource.getURI())));
         //Mainstream Search Result
         List<VideoContent.BasicInfo> mainstreamList = getMainstreamBasicInfos();
-        mainstreamSearchResult = new BasicInfoConnection(mainstreamList, new PageInfo(mainstreamList.size(), mainstreamList.size(), 1, 1, false));
+        mainstreamSearchResult = new BasicInfoConnection(mainstreamList, new PageInfo.PageInfoBuilder().increaseTotal(mainstreamList.size()).setPerPage(mainstreamList.size()).setCurrentPageIfLess(1).setLastPageIfGreater(1).setHasNextPage(false).createPageInfo());
         //Anime Search Result
         List<VideoContent.BasicInfo> animeList = getAnimeBasicInfos();
-        animeSearchResult = new BasicInfoConnection(animeList, new PageInfo(animeList.size(), animeList.size()*2, 1, 2, true));
+        animeSearchResult = new BasicInfoConnection(animeList, new PageInfo.PageInfoBuilder().increaseTotal(animeList.size()).setPerPage(animeList.size() * 2).setCurrentPageIfLess(1).setLastPageIfGreater(2).setHasNextPage(true).createPageInfo());
     }
 
     private static List<VideoContent.BasicInfo> getMainstreamBasicInfos() {
@@ -118,8 +128,13 @@ public class SearchControllerTest {
     }
 
     @Test
-    public void mainstreamSearchFound() throws ContentNotFoundException {
-        when(videoContentService.search(eq("Test"), eq(VideoContentCategory.MAINSTREAM), anyList(), eq(1))).thenReturn(mainstreamSearchResult);
+    public void mainstreamSearchFound() throws TooManyAnimeRequestsException {
+        when(videoContentSearchService.search(argThat( criteria ->
+                "Test".equals(criteria.query()) &&
+                        criteria.category() == VideoContentCategory.MAINSTREAM &&
+                        criteria.formats() != null &&
+                        criteria.page() == 1
+        ))).thenReturn(mainstreamSearchResult);
 
         GraphQlTester.Response response = tester.document(mainstreamSearch)
                 .execute();
@@ -139,21 +154,41 @@ public class SearchControllerTest {
     }
 
     @Test
-    public void mainstreamSearchNotFound() throws ContentNotFoundException {
-        when(videoContentService.search(eq("Test"), eq(VideoContentCategory.MAINSTREAM), anyList(), eq(1))).thenThrow(new ContentNotFoundException());
+    public void mainstreamSearchNotFound() throws TooManyAnimeRequestsException {
+        PageInfo expectedPageInfo = new PageInfo.PageInfoBuilder().setPerPage(0).setCurrentPageIfLess(1).setLastPageIfGreater(1).setHasNextPage(false).createPageInfo();
+        when(videoContentSearchService.search(argThat( criteria ->
+                "Test".equals(criteria.query()) &&
+                        criteria.category() == VideoContentCategory.MAINSTREAM &&
+                        criteria.formats() != null &&
+                        criteria.page() == 1
+        ))).thenReturn(new BasicInfoConnection(List.of(), expectedPageInfo));
 
-        tester.document(mainstreamSearch)
-                .execute()
+        GraphQlTester.Response response = tester.document(mainstreamSearch)
+                .execute();
+
+        List<VideoContent.BasicInfo> mainstreamList = response.errors()
+                .verify()
+                .path("search.nodes")
+                .entityList(VideoContent.BasicInfo.class)
+                .get();
+        PageInfo pageInfo = response
                 .errors()
-                .satisfy(errors -> {
-                    assertThat(errors).isNotEmpty();
-                    assertThat(errors.getFirst().getErrorType().toString()).isEqualTo("NOT_FOUND");
-                });
+                .verify()
+                .path("search.pageInfo")
+                .entity(PageInfo.class)
+                .get();
+        assertIterableEquals(List.of(), mainstreamList);
+        assertEquals(expectedPageInfo, pageInfo);
     }
 
     @Test
-    public void animeSearchFound() throws ContentNotFoundException {
-        when(videoContentService.search(eq("Test"), eq(VideoContentCategory.ANIME), anyList(), eq(1))).thenReturn(animeSearchResult);
+    public void animeSearchFound() throws TooManyAnimeRequestsException {
+        when(videoContentSearchService.search(argThat( criteria ->
+                "Test".equals(criteria.query()) &&
+                        criteria.category() == VideoContentCategory.ANIME &&
+                        criteria.formats() != null &&
+                        criteria.page() == 1
+        ))).thenReturn(animeSearchResult);
 
         GraphQlTester.Response response = tester.document(animeSearch)
                 .execute();
@@ -173,15 +208,30 @@ public class SearchControllerTest {
     }
 
     @Test
-    public void animeSearchNotFound() throws ContentNotFoundException {
-        when(videoContentService.search(eq("Test"), eq(VideoContentCategory.ANIME), anyList(), eq(1))).thenThrow(new ContentNotFoundException());
+    public void animeSearchNotFound() throws TooManyAnimeRequestsException {
+        PageInfo expectedPageInfo = new PageInfo.PageInfoBuilder().setPerPage(0).setCurrentPageIfLess(1).setLastPageIfGreater(1).setHasNextPage(false).createPageInfo();
+        when(videoContentSearchService.search(argThat( criteria ->
+                "Test".equals(criteria.query()) &&
+                        criteria.category() == VideoContentCategory.ANIME &&
+                        criteria.formats() != null &&
+                        criteria.page() == 1
+        ))).thenReturn(new BasicInfoConnection(List.of(), expectedPageInfo));
 
-        tester.document(animeSearch)
-                .execute()
+        GraphQlTester.Response response = tester.document(animeSearch)
+                .execute();
+
+        List<VideoContent.BasicInfo> animeList = response.errors()
+                .verify()
+                .path("search.nodes")
+                .entityList(VideoContent.BasicInfo.class)
+                .get();
+        PageInfo pageInfo = response
                 .errors()
-                .satisfy(errors -> {
-                    assertThat(errors).isNotEmpty();
-                    assertThat(errors.getFirst().getErrorType().toString()).isEqualTo("NOT_FOUND");
-                });
+                .verify()
+                .path("search.pageInfo")
+                .entity(PageInfo.class)
+                .get();
+        assertIterableEquals(List.of(), animeList);
+        assertEquals(expectedPageInfo, pageInfo);
     }
 }

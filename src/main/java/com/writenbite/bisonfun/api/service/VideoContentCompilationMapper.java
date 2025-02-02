@@ -1,7 +1,7 @@
 package com.writenbite.bisonfun.api.service;
 
 import com.writenbite.bisonfun.api.types.mapper.VideoContentFormatMapper;
-import com.writenbite.bisonfun.api.types.videocontent.input.TmdbIdInput;
+import com.writenbite.bisonfun.api.types.videocontent.input.TmdbVideoContentIdInput;
 import com.writenbite.bisonfun.api.types.videocontent.input.VideoContentIdInput;
 import com.writenbite.bisonfun.api.types.videocontent.VideoContentFormat;
 import org.mapstruct.Mapper;
@@ -20,6 +20,6 @@ public interface VideoContentCompilationMapper {
             tmdbId = fetchedContent.tmdbVideoContent().getTmdbId();
             format = videoContentFormatMapper.fromVideoContentType(fetchedContent.tmdbVideoContent().getVideoContentType());
         }
-        return new VideoContentIdInput(fetchedContent.videoContentDb() != null ? fetchedContent.videoContentDb().getId() : null, aniListId, new TmdbIdInput(tmdbId, format));
+        return new VideoContentIdInput(fetchedContent.videoContentDb() != null ? fetchedContent.videoContentDb().getId() : null, aniListId, new TmdbVideoContentIdInput(tmdbId, format));
     }
 }

@@ -1,12 +1,12 @@
 package com.writenbite.bisonfun.api.client.tmdb.mapper;
 
 import com.writenbite.bisonfun.api.client.tmdb.TmdbAnimeChecker;
+import com.writenbite.bisonfun.api.client.tmdb.types.TmdbVideoContent;
 import com.writenbite.bisonfun.api.database.entity.VideoContentCategory;
 import com.writenbite.bisonfun.api.types.videocontent.Network;
 import com.writenbite.bisonfun.api.types.videocontent.Studio;
 import com.writenbite.bisonfun.api.types.videocontent.VideoContentStatus;
 import info.movito.themoviedbapi.model.core.*;
-import info.movito.themoviedbapi.model.keywords.Keyword;
 import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -80,11 +80,8 @@ public interface TmdbMapper {
                 .collect(Collectors.toList());
     }
 
-    default VideoContentCategory toEntityCategory(List<Keyword> keywords){
-        if (!keywords.isEmpty()) {
-            return TmdbAnimeChecker.animeKeywordCheck(keywords) ? VideoContentCategory.ANIME : VideoContentCategory.MAINSTREAM;
-        }
-        return VideoContentCategory.MAINSTREAM;
+    default VideoContentCategory toEntityCategory(TmdbVideoContent tmdbVideoContent){
+        return TmdbAnimeChecker.isTmdbContentAnime(tmdbVideoContent) ? VideoContentCategory.ANIME : VideoContentCategory.MAINSTREAM;
     }
 
     @Named("tvSeriesDuration")
