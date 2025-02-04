@@ -4,10 +4,9 @@ import com.writenbite.bisonfun.api.client.ContentNotFoundException;
 import com.writenbite.bisonfun.api.client.NoAccessException;
 import com.writenbite.bisonfun.api.client.anilist.AniListApiResponse;
 import com.writenbite.bisonfun.api.client.anilist.AniListClient;
+import com.writenbite.bisonfun.api.client.anilist.types.media.AniListTrends;
 import com.writenbite.bisonfun.api.service.external.TooManyAnimeRequestsException;
-import com.writenbite.bisonfun.api.client.anilist.types.AniListPage;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMedia;
-import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaPage;
 import com.writenbite.bisonfun.api.client.tmdb.TmdbClient;
 import com.writenbite.bisonfun.api.client.tmdb.mapper.ResultsPageMapper;
 import com.writenbite.bisonfun.api.client.tmdb.types.TmdbVideoContent;
@@ -111,7 +110,6 @@ public class RedisCacheTest {
     @Test
     public void givenRedisCaching_whenMovieTrends_thenMovieTrendsReturnedFromCache() throws TmdbException, NoAccessException {
         MovieResultsPage instancioMovieTrends = ModelConfig.ofTmdbApi(MovieResultsPage.class).create();
-//        ResultsPage<TmdbSimpleVideoContent> movieTrends = resultsPageMapper.fromMovieResultsPage(instancioMovieTrends);
         when(tmdbApi.getTrending()).thenReturn(tmdbTrending);
         when(tmdbTrending.getMovies(TimeWindow.WEEK, null)).thenReturn(instancioMovieTrends);
 
@@ -143,18 +141,19 @@ public class RedisCacheTest {
 
     @Test
     public void givenRedisCaching_whenAnimeTrends_thenAnimeTrendsReturnedFromCache() throws NoAccessException, TooManyAnimeRequestsException {
-        when(aniListApiResponse.getAnimeTrends()).thenReturn(new JSONObject(animeTrends));
+        when(aniListApiResponse.getAnimeTrendsList()).thenReturn(new JSONObject(animeTrends));
 
-        AniListPage<AniListMedia> trendsNotCached = aniListClient.parseAnimeTrends();
-        AniListPage<AniListMedia> cachedTrends = aniListClient.parseAnimeTrends();
+        AniListTrends trendsNotCached = aniListClient.parseAnimeTrendsList();
+        AniListTrends cachedTrends = aniListClient.parseAnimeTrendsList();
 
-        assertThat(trendsNotCached.getPageInfo()).isEqualTo(cachedTrends.getPageInfo());
-        assertThat(trendsNotCached.getList()).isEqualTo(cachedTrends.getList());
-        verify(aniListApiResponse, times(1)).getAnimeTrends();
-        AniListPage<AniListMedia> animeTrendsFromCache = cacheManager.getCache("animeTrends").get(SimpleKey.EMPTY, AniListMediaPage.class);
+        assertThat(trendsNotCached.movieTrends().getPageInfo()).isEqualTo(cachedTrends.movieTrends().getPageInfo());
+        assertThat(trendsNotCached.movieTrends().getList()).isEqualTo(cachedTrends.movieTrends().getList());
+        verify(aniListApiResponse, times(1)).getAnimeTrendsList();
+        AniListTrends animeTrendsFromCache = cacheManager.getCache("animeTrends").get(SimpleKey.EMPTY, AniListTrends.class);
         assertThat(animeTrendsFromCache).isNotNull();
-        assertThat(animeTrendsFromCache.getPageInfo()).isEqualTo(cachedTrends.getPageInfo());
-        assertThat(animeTrendsFromCache.getList()).isEqualTo(cachedTrends.getList());
+        assertThat(animeTrendsFromCache.movieTrends()).isNotNull();
+        assertThat(animeTrendsFromCache.movieTrends().getPageInfo()).isEqualTo(cachedTrends.movieTrends().getPageInfo());
+        assertThat(animeTrendsFromCache.movieTrends().getList()).isEqualTo(cachedTrends.movieTrends().getList());
     }
 
     @Test

@@ -60,17 +60,17 @@ public class AniListApiResponse {
         return new JSONObject(result.getBody()).getJSONObject("data").getJSONObject("Page");
     }
     /**
-     * Get list of anime trends. Cacheable as "animeTrends".
+     * Get list of anime trends.
      * @return "Page" JSONObject which have page info(number, count, etc.) and JSONArray of anime "Media" JSONObjects.
      * @throws TooManyAnimeRequestsException if Anilist.co have got more requests than limit from app's account.
      * @throws NoAccessException if app can't access to Anilist.co API.
      */
-    public JSONObject getAnimeTrends() throws TooManyAnimeRequestsException, NoAccessException {
-        log.info("Get anime trends");
+    public JSONObject getAnimeTrendsList() throws NoAccessException, TooManyAnimeRequestsException {
+        log.info("Get anime trends list");
         HttpResponse<String> result;
         try {
             result = Unirest.post(AniList.GRAPHQL.link)
-                    .queryString("query", AniListQuery.ANIME_TRENDING.getQuery())
+                    .queryString("query", AniListQuery.ANIME_TRENDS.getQuery())
                     .asString();
         }catch (Exception e){
             throw new NoAccessException("No Access to Anilist.co");
@@ -80,15 +80,16 @@ public class AniListApiResponse {
         if(result.getStatus() == 429){
             String secs = result.getHeaders().getFirst("Retry-After");
             int seconds = Integer.parseInt(secs);
-            log.warn("Getting anime trends result delay in {} seconds", seconds);
+            log.warn("Getting anime trends list result delay in {} seconds", seconds);
             throw new TooManyAnimeRequestsException(seconds);
         }else if(result.getStatus() == 400){
-            log.error("Getting anime trends something went wrong:\n{}\n{}\n", AniList.GRAPHQL, AniListQuery.ANIME_BY_ID);
+            log.error("Getting anime trends list something went wrong:\n{}\n{}\n", AniList.GRAPHQL, AniListQuery.ANIME_BY_ID);
             throw new NoAccessException("No Access to Anilist.co");
         }
 
-        return new JSONObject(result.getBody()).getJSONObject("data").getJSONObject("Page");
+        return new JSONObject(result.getBody()).getJSONObject("data");
     }
+
     /**
      * Get anime by id. Cacheable as "jsonAnime".
      * @param id identification number from Anilist database.

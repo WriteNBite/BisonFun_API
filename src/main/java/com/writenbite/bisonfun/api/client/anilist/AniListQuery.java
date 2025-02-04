@@ -35,7 +35,7 @@ public enum AniListQuery {
     /**
      * Query to get trending anime
      */
-    ANIME_TRENDING("graphql/anilist/anime_trending.graphql");
+    ANIME_TRENDS("graphql/anilist/anime_trends.graphql");
 
     @SneakyThrows
     AniListQuery(String classpath){

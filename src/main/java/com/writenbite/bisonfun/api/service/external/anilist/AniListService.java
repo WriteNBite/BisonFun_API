@@ -2,20 +2,20 @@ package com.writenbite.bisonfun.api.service.external.anilist;
 
 import com.writenbite.bisonfun.api.client.ContentNotFoundException;
 import com.writenbite.bisonfun.api.client.anilist.AniListClient;
+import com.writenbite.bisonfun.api.client.anilist.types.media.AniListTrends;
 import com.writenbite.bisonfun.api.service.external.TooManyAnimeRequestsException;
-import com.writenbite.bisonfun.api.client.anilist.types.AniListPage;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMedia;
 import com.writenbite.bisonfun.api.database.entity.VideoContent;
 import com.writenbite.bisonfun.api.service.external.AnimeService;
 import com.writenbite.bisonfun.api.service.RawVideoContentFactory;
 import com.writenbite.bisonfun.api.service.external.database.VideoContentEntityService;
+import com.writenbite.bisonfun.api.types.videocontent.VideoContentFormat;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static com.writenbite.bisonfun.api.service.VideoContentServiceUtils.isNotNullAndPositive;
 
@@ -126,12 +126,12 @@ public class AniListService implements AnimeService<AniListMedia, VideoContent> 
     }
 
     @Override
-    public List<com.writenbite.bisonfun.api.types.videocontent.VideoContent.BasicInfo> getAnimeTrends() throws TooManyAnimeRequestsException {
-        AniListPage<AniListMedia> aniListMedia = aniListClient.parseAnimeTrends();
-        Map<AniListMedia, Optional<VideoContent>> aniListMediaVideoContentMap = videoContentEntityService.getAnimeContentMap(aniListMedia.getList());
+    public List<com.writenbite.bisonfun.api.types.videocontent.VideoContent.BasicInfo> getAnimeTrends(VideoContentFormat format) throws TooManyAnimeRequestsException {
+        AniListTrends aniListTrends = aniListClient.parseAnimeTrendsList();
+        Map<AniListMedia, Optional<VideoContent>> aniListMediaVideoContentMap = videoContentEntityService.getAnimeContentMap(aniListTrends.getTrendsByFormat(format));
         return aniListMediaVideoContentMap.keySet()
                 .stream()
                 .map(media -> rawVideoContentFactory.toBasicInfo(aniListMediaVideoContentMap.getOrDefault(media, null).orElse(null), media))
-                .collect(Collectors.toList());
+                .toList();
     }
 }

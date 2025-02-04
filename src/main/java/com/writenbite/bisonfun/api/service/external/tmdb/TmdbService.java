@@ -181,7 +181,7 @@ public class TmdbService implements MainstreamService<TmdbVideoContent, VideoCon
             tmdbTrends = switch (videoContentFormat) {
                 case TV: yield tmdbClient.parseTVTrends();
                 case MOVIE: yield tmdbClient.parseMovieTrends();
-                default: throw new IllegalStateException("Unexpected value: " + videoContentFormat);
+                default: yield new TmdbVideoContentResultsPage(List.of(), 1, 1, 0, 0);
             };
         } catch (NoAccessException e) {
             log.error(e.getMessage());

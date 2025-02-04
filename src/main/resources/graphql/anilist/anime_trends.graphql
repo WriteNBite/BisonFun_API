@@ -1,0 +1,55 @@
+query trends {
+    tv_trends: Page(perPage: 25) {
+        pageInfo { perPage }
+        media(
+            type: ANIME,
+            format_in: [TV, TV_SHORT, OVA, ONA],
+            isAdult: false,
+            sort: TRENDING_DESC
+        ) { ...mediaFragment }
+    }
+    movie_trends: Page(perPage: 25) {
+        pageInfo { perPage }
+        media(
+            type: ANIME,
+            format: MOVIE,
+            isAdult: false,
+            sort: TRENDING_DESC
+        ) { ...mediaFragment }
+    }
+    music_trends: Page(perPage: 25) {
+        pageInfo { perPage }
+        media(
+            type: ANIME,
+            format: MUSIC,
+            isAdult: false,
+            sort: TRENDING_DESC
+        ) { ...mediaFragment }
+    }
+    special_trends: Page(perPage: 25) {
+        pageInfo { perPage }
+        media(
+            type: ANIME,
+            format: SPECIAL,
+            isAdult: false,
+            sort: TRENDING_DESC
+        ) { ...mediaFragment }
+    }
+}
+
+fragment mediaFragment on Media {
+    id
+    title {
+        romaji
+        english
+    }
+    coverImage {
+        large
+    }
+    format
+    startDate {
+        day
+        month
+        year
+    }
+}

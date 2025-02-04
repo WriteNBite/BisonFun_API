@@ -6,9 +6,7 @@ import com.writenbite.bisonfun.api.config.ModelConfig;
 import info.movito.themoviedbapi.TmdbApi;
 import info.movito.themoviedbapi.TmdbTrending;
 import info.movito.themoviedbapi.model.core.MovieResultsPage;
-import info.movito.themoviedbapi.model.core.TvSeriesResultsPage;
 import info.movito.themoviedbapi.tools.model.time.TimeWindow;
-import kong.unirest.core.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,13 +59,10 @@ public class RateLimitingTest {
     @Mock
     private TmdbTrending tmdbTrending;
 
-    private String animeTrends;
     private String trendsRequest;
 
     @BeforeEach
     public void setUp() throws IOException {
-        animeTrends = readResourceFile("animeTrends.json");
-
         trendsRequest = readResourceFile("graphql-test/api/trendingTest.graphql");
 
         clearAllCaches();
@@ -90,11 +85,8 @@ public class RateLimitingTest {
     @Test
     public void givenRedisCaching_whenMovieTrendsReachedMaximumLimitPerMinute_thenMovieTrendsReturnTooManyRequestsError() throws Exception {
         MovieResultsPage movieTrends = ModelConfig.ofTmdbApi(MovieResultsPage.class).create();
-        TvSeriesResultsPage tvTrends = ModelConfig.ofTmdbApi(TvSeriesResultsPage.class).create();
         when(tmdbApi.getTrending()).thenReturn(tmdbTrending);
         when(tmdbTrending.getMovies(TimeWindow.WEEK, null)).thenReturn(movieTrends);
-        when(tmdbTrending.getTv(TimeWindow.WEEK, null)).thenReturn(tvTrends);
-        when(aniListApiResponse.getAnimeTrends()).thenReturn(new JSONObject(animeTrends));
 
         Map<String, String> requestBodyMap = new HashMap<>();
         requestBodyMap.put("query", trendsRequest);

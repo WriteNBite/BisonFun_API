@@ -12,7 +12,8 @@ import com.writenbite.bisonfun.api.service.search.VideoContentSearchService;
 import com.writenbite.bisonfun.api.types.Connection;
 import com.writenbite.bisonfun.api.types.videocontent.input.VideoContentIdInput;
 import com.writenbite.bisonfun.api.types.videocontent.*;
-import com.writenbite.bisonfun.api.types.videocontent.output.TrendVideoContentResponse;
+import com.writenbite.bisonfun.api.types.videocontent.input.VideoContentTrendsInput;
+import com.writenbite.bisonfun.api.types.videocontent.output.VideoContentTrendsResponse;
 import graphql.execution.DataFetcherResult;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.SelectedField;
@@ -20,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
-import org.springframework.graphql.data.method.annotation.SchemaMapping;
 import org.springframework.stereotype.Controller;
 
 import java.util.ArrayList;
@@ -68,20 +68,12 @@ public class VideoContentController {
     }
 
     @QueryMapping
-    public TrendVideoContentResponse trendVideoContent(){
-        return new TrendVideoContentResponse(null, null, null);
-    }
-    @SchemaMapping(typeName = "TrendVideoContentResponse", field = "animeTrends")
-    public List<VideoContent.BasicInfo> animeTrends() throws ContentNotFoundException, TooManyAnimeRequestsException {
-        return animeService.getAnimeTrends();
-    }
-    @SchemaMapping(typeName = "TrendVideoContentResponse", field = "movieTrends")
-    public List<VideoContent.BasicInfo> movieTrends() throws ContentNotFoundException {
-        return mainstreamService.getTrends(VideoContentFormat.MOVIE);
-    }
-    @SchemaMapping(typeName = "TrendVideoContentResponse", field = "tvTrends")
-    public List<VideoContent.BasicInfo> tvTrends() throws ContentNotFoundException {
-        return mainstreamService.getTrends(VideoContentFormat.TV);
+    public VideoContentTrendsResponse videoContentTrends(@Argument VideoContentTrendsInput input) throws TooManyAnimeRequestsException, ContentNotFoundException {
+        List<VideoContent.BasicInfo> trends = switch (input.category()){
+            case MAINSTREAM -> mainstreamService.getTrends(input.format());
+            case ANIME -> animeService.getAnimeTrends(input.format());
+        };
+        return new VideoContentTrendsResponse(input.category(), input.format(), trends);
     }
 
 }

@@ -30,6 +30,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @GraphQlTest(VideoContentController.class)
@@ -56,7 +57,7 @@ public class TrendingControllerTest {
     @BeforeEach
     public void setUpTrends() throws IOException {
         //Get trends
-        Resource trendinResource = new ClassPathResource("graphql-test/api/trendingTest.graphql");
+        Resource trendinResource = new ClassPathResource("graphql-test/api/manyTrendingTests.graphql");
         trending = new String(Files.readAllBytes(Paths.get(trendinResource.getURI())));
         //Trends
         animeTrends = getAnimeTrends();
@@ -162,7 +163,7 @@ public class TrendingControllerTest {
 
     @Test
     public void trendsFound() throws ContentNotFoundException, TooManyAnimeRequestsException {
-        when(animeService.getAnimeTrends()).thenReturn(animeTrends);
+        when(animeService.getAnimeTrends(any())).thenReturn(animeTrends);
         when(mainstreamService.getTrends(VideoContentFormat.MOVIE)).thenReturn(movieTrends);
         when(mainstreamService.getTrends(VideoContentFormat.TV)).thenReturn(tvTrends);
 
@@ -170,13 +171,13 @@ public class TrendingControllerTest {
                 .execute();
         response.errors()
                 .verify();
-        List<VideoContent.BasicInfo> animeTrendsResult = response.path("trendVideoContent.animeTrends")
+        List<VideoContent.BasicInfo> animeTrendsResult = response.path("anime_trends.trends")
                 .entityList(VideoContent.BasicInfo.class)
                 .get();
-        List<VideoContent.BasicInfo> movieTrendsResult = response.path("trendVideoContent.movieTrends")
+        List<VideoContent.BasicInfo> movieTrendsResult = response.path("movie_trends.trends")
                 .entityList(VideoContent.BasicInfo.class)
                 .get();
-        List<VideoContent.BasicInfo> tvTrendsResult = response.path("trendVideoContent.tvTrends")
+        List<VideoContent.BasicInfo> tvTrendsResult = response.path("tv_trends.trends")
                 .entityList(VideoContent.BasicInfo.class)
                 .get();
         assertIterableEquals(animeTrends, animeTrendsResult);
@@ -186,7 +187,7 @@ public class TrendingControllerTest {
 
     @Test
     public void animeTrendsNotFound() throws ContentNotFoundException, TooManyAnimeRequestsException {
-        when(animeService.getAnimeTrends()).thenReturn(List.of());
+        when(animeService.getAnimeTrends(any())).thenReturn(List.of());
         when(mainstreamService.getTrends(VideoContentFormat.MOVIE)).thenReturn(movieTrends);
         when(mainstreamService.getTrends(VideoContentFormat.TV)).thenReturn(tvTrends);
 
@@ -194,13 +195,13 @@ public class TrendingControllerTest {
                 .execute();
         response.errors()
                 .verify();
-        List<VideoContent.BasicInfo> animeTrendsResult = response.path("trendVideoContent.animeTrends")
+        List<VideoContent.BasicInfo> animeTrendsResult = response.path("anime_trends.trends")
                 .entityList(VideoContent.BasicInfo.class)
                 .get();
-        List<VideoContent.BasicInfo> movieTrendsResult = response.path("trendVideoContent.movieTrends")
+        List<VideoContent.BasicInfo> movieTrendsResult = response.path("movie_trends.trends")
                 .entityList(VideoContent.BasicInfo.class)
                 .get();
-        List<VideoContent.BasicInfo> tvTrendsResult = response.path("trendVideoContent.tvTrends")
+        List<VideoContent.BasicInfo> tvTrendsResult = response.path("tv_trends.trends")
                 .entityList(VideoContent.BasicInfo.class)
                 .get();
         assertIterableEquals(List.of(), animeTrendsResult);
@@ -210,7 +211,7 @@ public class TrendingControllerTest {
 
     @Test
     public void movieTrendsNotFound() throws ContentNotFoundException, TooManyAnimeRequestsException {
-        when(animeService.getAnimeTrends()).thenReturn(animeTrends);
+        when(animeService.getAnimeTrends(any())).thenReturn(animeTrends);
         when(mainstreamService.getTrends(VideoContentFormat.MOVIE)).thenThrow(new ContentNotFoundException());
         when(mainstreamService.getTrends(VideoContentFormat.TV)).thenReturn(tvTrends);
 
@@ -221,12 +222,12 @@ public class TrendingControllerTest {
                     assertThat(errors).isNotEmpty();
                     assertThat(errors.getFirst().getErrorType().toString()).isEqualTo("NOT_FOUND");
                 });
-        List<VideoContent.BasicInfo> animeTrendsResult = response.path("trendVideoContent.animeTrends")
+        List<VideoContent.BasicInfo> animeTrendsResult = response.path("anime_trends.trends")
                 .entityList(VideoContent.BasicInfo.class)
                 .get();
-        response.path("trendVideoContent.movieTrends")
+        response.path("movie_trends")
                 .valueIsNull();
-        List<VideoContent.BasicInfo> tvTrendsResult = response.path("trendVideoContent.tvTrends")
+        List<VideoContent.BasicInfo> tvTrendsResult = response.path("tv_trends.trends")
                 .entityList(VideoContent.BasicInfo.class)
                 .get();
         assertIterableEquals(animeTrends, animeTrendsResult);
@@ -235,7 +236,7 @@ public class TrendingControllerTest {
 
     @Test
     public void tvTrendsNotFound() throws ContentNotFoundException, TooManyAnimeRequestsException {
-        when(animeService.getAnimeTrends()).thenReturn(animeTrends);
+        when(animeService.getAnimeTrends(any())).thenReturn(animeTrends);
         when(mainstreamService.getTrends(VideoContentFormat.MOVIE)).thenReturn(movieTrends);
         when(mainstreamService.getTrends(VideoContentFormat.TV)).thenThrow(new ContentNotFoundException());
 
@@ -246,13 +247,13 @@ public class TrendingControllerTest {
                     assertThat(errors).isNotEmpty();
                     assertThat(errors.getFirst().getErrorType().toString()).isEqualTo("NOT_FOUND");
                 });
-        List<VideoContent.BasicInfo> animeTrendsResult = response.path("trendVideoContent.animeTrends")
+        List<VideoContent.BasicInfo> animeTrendsResult = response.path("anime_trends.trends")
                 .entityList(VideoContent.BasicInfo.class)
                 .get();
-        List<VideoContent.BasicInfo> movieTrendsResult = response.path("trendVideoContent.movieTrends")
+        List<VideoContent.BasicInfo> movieTrendsResult = response.path("movie_trends.trends")
                 .entityList(VideoContent.BasicInfo.class)
                 .get();
-        response.path("trendVideoContent.tvTrends")
+        response.path("tv_trends")
                 .valueIsNull();
         assertIterableEquals(animeTrends, animeTrendsResult);
         assertIterableEquals(movieTrends, movieTrendsResult);

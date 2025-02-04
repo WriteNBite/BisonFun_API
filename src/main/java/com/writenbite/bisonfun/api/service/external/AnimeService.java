@@ -1,6 +1,7 @@
 package com.writenbite.bisonfun.api.service.external;
 
 import com.writenbite.bisonfun.api.types.videocontent.VideoContent;
+import com.writenbite.bisonfun.api.types.videocontent.VideoContentFormat;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,5 +25,5 @@ public interface AnimeService<Anime, DatabaseVideoContent> {
 
     Optional<Anime> fetchAnimeContentByTitle(String title) throws TooManyAnimeRequestsException;
 
-    List<VideoContent.BasicInfo> getAnimeTrends() throws TooManyAnimeRequestsException;
+    List<VideoContent.BasicInfo> getAnimeTrends(VideoContentFormat format) throws TooManyAnimeRequestsException;
 }

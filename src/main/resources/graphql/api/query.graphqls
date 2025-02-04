@@ -7,8 +7,8 @@ type Query{
     authorisedUser: AuthorisedUserPayload
     "Get Video Content by one of id's"
     videoContentByIdInput(input: VideoContentIdInput): VideoContent
-    "Get Trending Video Content."
-    trendVideoContent: TrendVideoContentResponse
+    "Get Video Content Trends by category and format"
+    videoContentTrends(input: VideoContentTrendsInput): VideoContentTrendsResponse
 
     """
     Get User's Video Content List by category of content and status of consuming list.
