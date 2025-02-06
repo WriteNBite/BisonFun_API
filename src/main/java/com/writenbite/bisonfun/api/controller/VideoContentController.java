@@ -1,14 +1,19 @@
 package com.writenbite.bisonfun.api.controller;
 
 import com.writenbite.bisonfun.api.client.ContentNotFoundException;
-import com.writenbite.bisonfun.api.client.anilist.TooManyAnimeRequestsException;
-import com.writenbite.bisonfun.api.service.ExternalInfoException;
-import com.writenbite.bisonfun.api.service.VideoContentService;
+import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMedia;
+import com.writenbite.bisonfun.api.client.tmdb.types.TmdbVideoContent;
+import com.writenbite.bisonfun.api.service.*;
+import com.writenbite.bisonfun.api.service.external.AnimeService;
+import com.writenbite.bisonfun.api.service.external.MainstreamService;
+import com.writenbite.bisonfun.api.service.external.TooManyAnimeRequestsException;
+import com.writenbite.bisonfun.api.service.search.VideoContentSearchQuery;
+import com.writenbite.bisonfun.api.service.search.VideoContentSearchService;
 import com.writenbite.bisonfun.api.types.Connection;
 import com.writenbite.bisonfun.api.types.videocontent.input.VideoContentIdInput;
 import com.writenbite.bisonfun.api.types.videocontent.*;
-import com.writenbite.bisonfun.api.types.videocontent.output.TrendVideoContentResponse;
-import graphql.GraphQLError;
+import com.writenbite.bisonfun.api.types.videocontent.input.VideoContentTrendsInput;
+import com.writenbite.bisonfun.api.types.videocontent.output.VideoContentTrendsResponse;
 import graphql.execution.DataFetcherResult;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.SelectedField;
@@ -16,8 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
-import org.springframework.graphql.data.method.annotation.SchemaMapping;
-import org.springframework.graphql.execution.ErrorType;
 import org.springframework.stereotype.Controller;
 
 import java.util.ArrayList;
@@ -28,112 +31,16 @@ import java.util.List;
 public class VideoContentController {
 
     private final VideoContentService videoContentService;
+    private final VideoContentSearchService videoContentSearchService;
+    private final AnimeService<AniListMedia, com.writenbite.bisonfun.api.database.entity.VideoContent> animeService;
+    private final MainstreamService<TmdbVideoContent, com.writenbite.bisonfun.api.database.entity.VideoContent, AniListMedia> mainstreamService;
 
     @Autowired
-    public VideoContentController(VideoContentService videoContentService) {
+    public VideoContentController(VideoContentService videoContentService, VideoContentSearchService videoContentSearchService, AnimeService<AniListMedia, com.writenbite.bisonfun.api.database.entity.VideoContent> animeService, MainstreamService<TmdbVideoContent, com.writenbite.bisonfun.api.database.entity.VideoContent, AniListMedia> mainstreamService) {
         this.videoContentService = videoContentService;
-    }
-
-    @QueryMapping
-    public DataFetcherResult<VideoContent> videoContent(@Argument long id, DataFetchingEnvironment environment) throws ContentNotFoundException {
-        List<SelectedField> fields = new ArrayList<>(environment.getSelectionSet()
-                .getFields());
-        boolean hasExternalInfo = fields.stream().anyMatch(field -> field.getQualifiedName().equalsIgnoreCase("ExternalInfo"));
-
-        DataFetcherResult.Builder<VideoContent> builder = DataFetcherResult.newResult();
-        try {
-            builder.data(videoContentService.getVideoContentById(id, hasExternalInfo));
-        } catch (ExternalInfoException e) {
-            builder
-                    .data(new VideoContent(e.getData(VideoContent.BasicInfo.class).orElse(null), null))
-                    .error(
-                            GraphQLError.newError()
-                                    .errorType(ErrorType.INTERNAL_ERROR)
-                                    .message(e.getMessage())
-                                    .build()
-                    );
-        }
-        return builder.build();
-    }
-
-    @QueryMapping
-    public DataFetcherResult<VideoContent> videoContentByAniListId(@Argument Integer aniListId, DataFetchingEnvironment environment) throws ContentNotFoundException {
-        List<SelectedField> fields = new ArrayList<>(environment.getSelectionSet()
-                .getFields());
-        boolean hasExternalInfo = fields.stream().anyMatch(field -> field.getQualifiedName().equalsIgnoreCase("ExternalInfo"));
-        DataFetcherResult.Builder<VideoContent> builder = DataFetcherResult.newResult();
-        try {
-            builder.data(videoContentService.getVideoContentByAniListId(aniListId, hasExternalInfo));
-        } catch (ExternalInfoException e) {
-            builder.data(new VideoContent(e.getData(VideoContent.BasicInfo.class).orElse(null), null))
-                    .error(
-                            GraphQLError.newError()
-                                    .errorType(ErrorType.INTERNAL_ERROR)
-                                    .message(e.getMessage())
-                                    .build()
-                    );
-        }
-        return builder.build();
-    }
-
-    @QueryMapping
-    public DataFetcherResult<VideoContent> videoContentByTmdbId(@Argument Integer tmdbId, @Argument VideoContentFormat format, DataFetchingEnvironment environment) throws ContentNotFoundException {
-        List<SelectedField> fields = new ArrayList<>(environment.getSelectionSet()
-                .getFields());
-        boolean hasExternalInfo = fields.stream().anyMatch(field -> field.getQualifiedName().equalsIgnoreCase("ExternalInfo"));
-        DataFetcherResult.Builder<VideoContent> builder = DataFetcherResult.newResult();
-        try {
-            builder.data(videoContentService.getVideoContentByTmdbId(tmdbId, format, hasExternalInfo));
-        } catch (ExternalInfoException e) {
-            builder.data(new VideoContent(e.getData(VideoContent.BasicInfo.class).orElse(null), null))
-                    .error(
-                            GraphQLError.newError()
-                                    .errorType(ErrorType.INTERNAL_ERROR)
-                                    .message(e.getMessage())
-                                    .build()
-                    );
-        }
-        return builder.build();
-    }
-
-    @QueryMapping
-    public DataFetcherResult<VideoContent> videoContentByMalId(@Argument Integer malId, DataFetchingEnvironment environment) throws ContentNotFoundException {
-        List<SelectedField> fields = new ArrayList<>(environment.getSelectionSet()
-                .getFields());
-        boolean hasExternalInfo = fields.stream().anyMatch(field -> field.getQualifiedName().equalsIgnoreCase("ExternalInfo"));
-        DataFetcherResult.Builder<VideoContent> builder = DataFetcherResult.newResult();
-        try {
-            builder.data(videoContentService.getVideoContentByMalId(malId,hasExternalInfo));
-        } catch (ExternalInfoException e) {
-            builder.data(new VideoContent(e.getData(VideoContent.BasicInfo.class).orElse(null), null))
-                    .error(
-                            GraphQLError.newError()
-                                    .errorType(ErrorType.INTERNAL_ERROR)
-                                    .message(e.getMessage())
-                                    .build()
-                    );
-        }
-        return builder.build();
-    }
-
-    @QueryMapping
-    public DataFetcherResult<VideoContent> videoContentByImdbId(@Argument String imdbId, DataFetchingEnvironment environment) throws ContentNotFoundException {
-        List<SelectedField> fields = new ArrayList<>(environment.getSelectionSet()
-                .getFields());
-        boolean hasExternalInfo = fields.stream().anyMatch(field -> field.getQualifiedName().equalsIgnoreCase("ExternalInfo"));
-        DataFetcherResult.Builder<VideoContent> builder = DataFetcherResult.newResult();
-        try {
-            builder.data(videoContentService.getVideoContentByImdbId(imdbId,hasExternalInfo));
-        } catch (ExternalInfoException e) {
-            builder.data(new VideoContent(e.getData(VideoContent.BasicInfo.class).orElse(null), null))
-                    .error(
-                            GraphQLError.newError()
-                                    .errorType(ErrorType.INTERNAL_ERROR)
-                                    .message(e.getMessage())
-                                    .build()
-                    );
-        }
-        return builder.build();
+        this.videoContentSearchService = videoContentSearchService;
+        this.animeService = animeService;
+        this.mainstreamService = mainstreamService;
     }
 
     @QueryMapping
@@ -152,29 +59,21 @@ public class VideoContentController {
             @Argument VideoContentCategory category,
             @Argument List<VideoContentFormat> formats,
             @Argument Integer page
-    ) throws ContentNotFoundException {
+    ) throws ContentNotFoundException, TooManyAnimeRequestsException {
         return DataFetcherResult.<Connection<VideoContent.BasicInfo>>newResult()
                 .data(
-                        videoContentService.search(query, category, formats, page)
+                        videoContentSearchService.search(new VideoContentSearchQuery(query, category, formats, page))
                 )
                 .build();
     }
 
     @QueryMapping
-    public TrendVideoContentResponse trendVideoContent(){
-        return new TrendVideoContentResponse(null, null, null);
-    }
-    @SchemaMapping(typeName = "TrendVideoContentResponse", field = "animeTrends")
-    public List<VideoContent.BasicInfo> animeTrends() throws ContentNotFoundException {
-        return videoContentService.getAnimeTrends();
-    }
-    @SchemaMapping(typeName = "TrendVideoContentResponse", field = "movieTrends")
-    public List<VideoContent.BasicInfo> movieTrends() throws ContentNotFoundException {
-        return videoContentService.getMovieTrends();
-    }
-    @SchemaMapping(typeName = "TrendVideoContentResponse", field = "tvTrends")
-    public List<VideoContent.BasicInfo> tvTrends() throws ContentNotFoundException {
-        return videoContentService.getTvTrends();
+    public VideoContentTrendsResponse videoContentTrends(@Argument VideoContentTrendsInput input) throws TooManyAnimeRequestsException, ContentNotFoundException {
+        List<VideoContent.BasicInfo> trends = switch (input.category()){
+            case MAINSTREAM -> mainstreamService.getTrends(input.format());
+            case ANIME -> animeService.getAnimeTrends(input.format());
+        };
+        return new VideoContentTrendsResponse(input.category(), input.format(), trends);
     }
 
 }

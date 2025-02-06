@@ -1,5 +1,7 @@
 package com.writenbite.bisonfun.api.database.entity;
 
+import com.writenbite.bisonfun.api.client.tmdb.TmdbPosterConfiguration;
+import com.writenbite.bisonfun.api.service.RawVideoContent;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,7 +15,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "video_content")
-public class VideoContent {
+public class VideoContent implements RawVideoContent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -53,9 +55,17 @@ public class VideoContent {
     @Column(name = "last_updated", nullable = false)
     private LocalDate lastUpdated;
 
+    @PreUpdate
     @PrePersist
     public void prePersist(){
         lastUpdated = LocalDate.now();
+    }
+
+    public String getPoster() {
+        if (poster.startsWith("/") && category == VideoContentCategory.MAINSTREAM){
+            return TmdbPosterConfiguration.DEFAULT.getUrl() + poster;
+        }
+        return poster;
     }
 
     @Override

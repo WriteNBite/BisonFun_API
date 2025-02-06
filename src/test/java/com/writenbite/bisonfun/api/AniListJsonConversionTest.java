@@ -2,8 +2,7 @@ package com.writenbite.bisonfun.api;
 
 import com.google.gson.Gson;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMedia;
-import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaPage;
-import com.writenbite.bisonfun.api.client.anilist.types.AniListPage;
+import com.writenbite.bisonfun.api.client.anilist.types.media.AniListTrends;
 import kong.unirest.core.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,8 +63,8 @@ public class AniListJsonConversionTest {
 
     @Test
     public void givenJsonString_whenDeserialized_thenMediaListCreated(){
-        AniListPage<AniListMedia> trends = new Gson().fromJson(animeTrends, AniListMediaPage.class);
-        assertNotNull(trends.getList());
-        assertNotNull(trends.getPageInfo());
+        AniListTrends trends = new Gson().fromJson(animeTrends, AniListTrends.class);
+        assertNotNull(trends.movieTrends().getList());
+        assertNotNull(trends.movieTrends().getPageInfo());
     }
 }

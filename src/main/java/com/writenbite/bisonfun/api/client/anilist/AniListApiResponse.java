@@ -3,6 +3,7 @@ package com.writenbite.bisonfun.api.client.anilist;
 import com.writenbite.bisonfun.api.client.ContentNotFoundException;
 import com.writenbite.bisonfun.api.client.NoAccessException;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaFormat;
+import com.writenbite.bisonfun.api.service.external.TooManyAnimeRequestsException;
 import kong.unirest.core.HttpResponse;
 import kong.unirest.core.Unirest;
 import kong.unirest.core.json.JSONArray;
@@ -46,30 +47,30 @@ public class AniListApiResponse {
         if(result.getStatus() == 429){
             String secs = result.getHeaders().getFirst("Retry-After");
             int seconds = Integer.parseInt(secs);
-            log.warn("delay in {} seconds", seconds);
+            log.warn("Get Anime Search resulted delay in {} seconds", seconds);
             throw new TooManyAnimeRequestsException(seconds);
         }else if(result.getStatus() == 404){
-            log.error("Anime weren't found("+search+");");
+            log.error("After anime search anime weren't found({});", search);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }else if(result.getStatus() == 400){
-            log.error("Something went wrong:\n"+ AniList.GRAPHQL+"\n"+AniListQuery.ANIME_BY_ID+"\n"+variables);
+            log.error("After anime search something went wrong:\n{}\n{}\n{}", AniList.GRAPHQL, AniListQuery.ANIME_BY_ID, variables);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         return new JSONObject(result.getBody()).getJSONObject("data").getJSONObject("Page");
     }
     /**
-     * Get list of anime trends. Cacheable as "animeTrends".
+     * Get list of anime trends.
      * @return "Page" JSONObject which have page info(number, count, etc.) and JSONArray of anime "Media" JSONObjects.
      * @throws TooManyAnimeRequestsException if Anilist.co have got more requests than limit from app's account.
      * @throws NoAccessException if app can't access to Anilist.co API.
      */
-    public JSONObject getAnimeTrends() throws TooManyAnimeRequestsException, NoAccessException {
-        log.info("Get anime trends");
+    public JSONObject getAnimeTrendsList() throws NoAccessException, TooManyAnimeRequestsException {
+        log.info("Get anime trends list");
         HttpResponse<String> result;
         try {
             result = Unirest.post(AniList.GRAPHQL.link)
-                    .queryString("query", AniListQuery.ANIME_TRENDING.getQuery())
+                    .queryString("query", AniListQuery.ANIME_TRENDS.getQuery())
                     .asString();
         }catch (Exception e){
             throw new NoAccessException("No Access to Anilist.co");
@@ -79,15 +80,16 @@ public class AniListApiResponse {
         if(result.getStatus() == 429){
             String secs = result.getHeaders().getFirst("Retry-After");
             int seconds = Integer.parseInt(secs);
-            log.warn("delay in {} seconds", seconds);
+            log.warn("Getting anime trends list result delay in {} seconds", seconds);
             throw new TooManyAnimeRequestsException(seconds);
         }else if(result.getStatus() == 400){
-            log.error("Something went wrong:\n"+ AniList.GRAPHQL+"\n"+AniListQuery.ANIME_BY_ID+"\n");
+            log.error("Getting anime trends list something went wrong:\n{}\n{}\n", AniList.GRAPHQL, AniListQuery.ANIME_BY_ID);
             throw new NoAccessException("No Access to Anilist.co");
         }
 
-        return new JSONObject(result.getBody()).getJSONObject("data").getJSONObject("Page");
+        return new JSONObject(result.getBody()).getJSONObject("data");
     }
+
     /**
      * Get anime by id. Cacheable as "jsonAnime".
      * @param id identification number from Anilist database.
@@ -97,7 +99,7 @@ public class AniListApiResponse {
      */
 
     public JSONObject getAnimeById(int id) throws TooManyAnimeRequestsException, ContentNotFoundException {
-        log.info("Get Anime: {}", id);
+        log.info("Get Anime by id: {}", id);
         String variables = "{\n" +
                 "  \"id\": "+id+"\n" +
                 "}";
@@ -112,13 +114,13 @@ public class AniListApiResponse {
 
         if(anime.getStatus() == 429){
             int seconds = Integer.parseInt(anime.getHeaders().getFirst("Retry-After"));
-            log.warn("delay in {} seconds", seconds);
+            log.warn("Getting anime by id result delay in {} seconds", seconds);
             throw new TooManyAnimeRequestsException(seconds);
         }else if(anime.getStatus() == 404){
-            log.error("Anime {} not found", id);
+            log.error("Anime by id {} not found", id);
             throw new ContentNotFoundException("Anime #"+id+" not found");
         }else if(anime.getStatus() == 400){
-            log.error("Something went wrong:\n"+ AniList.GRAPHQL+"\n"+AniListQuery.ANIME_BY_ID+"\n"+variables);
+            log.error("In process in getting anime by id something went wrong:\n{}\n{}\n{}", AniList.GRAPHQL, AniListQuery.ANIME_BY_ID, variables);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -133,7 +135,7 @@ public class AniListApiResponse {
      */
 
     public JSONObject getAnimeByName(String name) throws TooManyAnimeRequestsException, ContentNotFoundException {
-        log.info("Get Anime: {}", name);
+        log.info("Get Anime by name: {}", name);
         String variables = "{\n" +
                 "  \"name\": \""+name+"\"\n" +
                 "}";
@@ -148,13 +150,13 @@ public class AniListApiResponse {
 
         if(anime.getStatus() == 429){
             int seconds = Integer.parseInt(anime.getHeaders().getFirst("Retry-After"));
-            log.warn("delay in {} seconds", seconds);
+            log.warn("Getting anime by name result delay in {} seconds", seconds);
             throw new TooManyAnimeRequestsException(seconds);
         }else if(anime.getStatus() == 404){
-            log.error("Anime \"{}\" not found", name);
+            log.error("Anime by name \"{}\" not found", name);
             throw new ContentNotFoundException("Anime '"+name+"' not found");
         }else if(anime.getStatus() == 400){
-            log.error("Something went wrong:\n"+ AniList.GRAPHQL+"\n"+AniListQuery.ANIME_BY_NAME+"\n"+variables);
+            log.error("In process of getting anime by name something went wrong:\n{}\n{}\n{}", AniList.GRAPHQL, AniListQuery.ANIME_BY_NAME, variables);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 

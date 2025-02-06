@@ -1,38 +1,8 @@
 query trendingTest{
-    trendVideoContent {
-        animeTrends {
-            id
-            title {
-                english
-            }
-            poster
-            category
-            format
-            year
-            externalIds {
-                aniListId
-                tmdbId
-                malId
-                imdbId
-            }
-        }
-        movieTrends {
-            id
-            title {
-                english
-            }
-            poster
-            category
-            format
-            year
-            externalIds {
-                aniListId
-                tmdbId
-                malId
-                imdbId
-            }
-        }
-        tvTrends {
+    videoContentTrends(input: {format: MOVIE, category: MAINSTREAM}) {
+        format
+        category
+        trends {
             id
             title {
                 english

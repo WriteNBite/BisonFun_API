@@ -1,0 +1,40 @@
+query manyTrendingTests{
+    movie_trends: videoContentTrends(input: {format: MOVIE, category: MAINSTREAM}) {
+        format
+        category
+        trends {
+            ...videoContent
+        }
+    }
+    tv_trends: videoContentTrends(input: {format: TV, category: MAINSTREAM}) {
+        format
+        category
+        trends {
+            ...videoContent
+        }
+    }
+    anime_trends: videoContentTrends(input: {format: MOVIE, category: ANIME}) {
+        format
+        category
+        trends {
+            ...videoContent
+        }
+    }
+}
+
+fragment videoContent on BasicInfo{
+    id
+    title {
+        english
+    }
+    poster
+    category
+    format
+    year
+    externalIds {
+        aniListId
+        tmdbId
+        malId
+        imdbId
+    }
+}

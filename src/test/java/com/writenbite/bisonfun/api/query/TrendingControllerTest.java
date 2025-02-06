@@ -1,21 +1,27 @@
 package com.writenbite.bisonfun.api.query;
 
 import com.writenbite.bisonfun.api.client.ContentNotFoundException;
+import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMedia;
+import com.writenbite.bisonfun.api.client.tmdb.types.TmdbVideoContent;
 import com.writenbite.bisonfun.api.config.GraphQlConfig;
 import com.writenbite.bisonfun.api.config.MapperConfig;
 import com.writenbite.bisonfun.api.controller.VideoContentController;
+import com.writenbite.bisonfun.api.service.external.AnimeService;
+import com.writenbite.bisonfun.api.service.external.MainstreamService;
+import com.writenbite.bisonfun.api.service.external.TooManyAnimeRequestsException;
 import com.writenbite.bisonfun.api.service.VideoContentService;
+import com.writenbite.bisonfun.api.service.search.VideoContentSearchService;
 import com.writenbite.bisonfun.api.types.videocontent.*;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.graphql.GraphQlTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.graphql.test.tester.GraphQlTester;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,6 +30,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @GraphQlTest(VideoContentController.class)
@@ -33,8 +40,14 @@ public class TrendingControllerTest {
     @Autowired
     private GraphQlTester tester;
 
-    @MockBean
+    @MockitoBean
     private VideoContentService videoContentService;
+    @MockitoBean
+    private VideoContentSearchService videoContentSearchService;
+    @MockitoBean
+    private AnimeService<AniListMedia, com.writenbite.bisonfun.api.database.entity.VideoContent> animeService;
+    @MockitoBean
+    private MainstreamService<TmdbVideoContent, com.writenbite.bisonfun.api.database.entity.VideoContent, AniListMedia> mainstreamService;
 
     private String trending;
     private List<VideoContent.BasicInfo> animeTrends;
@@ -44,7 +57,7 @@ public class TrendingControllerTest {
     @BeforeEach
     public void setUpTrends() throws IOException {
         //Get trends
-        Resource trendinResource = new ClassPathResource("graphql-test/api/trendingTest.graphql");
+        Resource trendinResource = new ClassPathResource("graphql-test/api/manyTrendingTests.graphql");
         trending = new String(Files.readAllBytes(Paths.get(trendinResource.getURI())));
         //Trends
         animeTrends = getAnimeTrends();
@@ -149,22 +162,22 @@ public class TrendingControllerTest {
     }
 
     @Test
-    public void trendsFound() throws ContentNotFoundException {
-        when(videoContentService.getAnimeTrends()).thenReturn(animeTrends);
-        when(videoContentService.getMovieTrends()).thenReturn(movieTrends);
-        when(videoContentService.getTvTrends()).thenReturn(tvTrends);
+    public void trendsFound() throws ContentNotFoundException, TooManyAnimeRequestsException {
+        when(animeService.getAnimeTrends(any())).thenReturn(animeTrends);
+        when(mainstreamService.getTrends(VideoContentFormat.MOVIE)).thenReturn(movieTrends);
+        when(mainstreamService.getTrends(VideoContentFormat.TV)).thenReturn(tvTrends);
 
         GraphQlTester.Response response = tester.document(trending)
                 .execute();
         response.errors()
                 .verify();
-        List<VideoContent.BasicInfo> animeTrendsResult = response.path("trendVideoContent.animeTrends")
+        List<VideoContent.BasicInfo> animeTrendsResult = response.path("anime_trends.trends")
                 .entityList(VideoContent.BasicInfo.class)
                 .get();
-        List<VideoContent.BasicInfo> movieTrendsResult = response.path("trendVideoContent.movieTrends")
+        List<VideoContent.BasicInfo> movieTrendsResult = response.path("movie_trends.trends")
                 .entityList(VideoContent.BasicInfo.class)
                 .get();
-        List<VideoContent.BasicInfo> tvTrendsResult = response.path("trendVideoContent.tvTrends")
+        List<VideoContent.BasicInfo> tvTrendsResult = response.path("tv_trends.trends")
                 .entityList(VideoContent.BasicInfo.class)
                 .get();
         assertIterableEquals(animeTrends, animeTrendsResult);
@@ -173,35 +186,34 @@ public class TrendingControllerTest {
     }
 
     @Test
-    public void animeTrendsNotFound() throws ContentNotFoundException {
-        when(videoContentService.getAnimeTrends()).thenThrow(new ContentNotFoundException());
-        when(videoContentService.getMovieTrends()).thenReturn(movieTrends);
-        when(videoContentService.getTvTrends()).thenReturn(tvTrends);
+    public void animeTrendsNotFound() throws ContentNotFoundException, TooManyAnimeRequestsException {
+        when(animeService.getAnimeTrends(any())).thenReturn(List.of());
+        when(mainstreamService.getTrends(VideoContentFormat.MOVIE)).thenReturn(movieTrends);
+        when(mainstreamService.getTrends(VideoContentFormat.TV)).thenReturn(tvTrends);
 
         GraphQlTester.Response response = tester.document(trending)
                 .execute();
         response.errors()
-                .satisfy(errors -> {
-                    assertThat(errors).isNotEmpty();
-                    assertThat(errors.getFirst().getErrorType().toString()).isEqualTo("NOT_FOUND");
-                });
-        response.path("trendVideoContent.animeTrends")
-                .valueIsNull();
-        List<VideoContent.BasicInfo> movieTrendsResult = response.path("trendVideoContent.movieTrends")
+                .verify();
+        List<VideoContent.BasicInfo> animeTrendsResult = response.path("anime_trends.trends")
                 .entityList(VideoContent.BasicInfo.class)
                 .get();
-        List<VideoContent.BasicInfo> tvTrendsResult = response.path("trendVideoContent.tvTrends")
+        List<VideoContent.BasicInfo> movieTrendsResult = response.path("movie_trends.trends")
                 .entityList(VideoContent.BasicInfo.class)
                 .get();
+        List<VideoContent.BasicInfo> tvTrendsResult = response.path("tv_trends.trends")
+                .entityList(VideoContent.BasicInfo.class)
+                .get();
+        assertIterableEquals(List.of(), animeTrendsResult);
         assertIterableEquals(movieTrends, movieTrendsResult);
         assertIterableEquals(tvTrends, tvTrendsResult);
     }
 
     @Test
-    public void movieTrendsNotFound() throws ContentNotFoundException {
-        when(videoContentService.getAnimeTrends()).thenReturn(animeTrends);
-        when(videoContentService.getMovieTrends()).thenThrow(new ContentNotFoundException());
-        when(videoContentService.getTvTrends()).thenReturn(tvTrends);
+    public void movieTrendsNotFound() throws ContentNotFoundException, TooManyAnimeRequestsException {
+        when(animeService.getAnimeTrends(any())).thenReturn(animeTrends);
+        when(mainstreamService.getTrends(VideoContentFormat.MOVIE)).thenThrow(new ContentNotFoundException());
+        when(mainstreamService.getTrends(VideoContentFormat.TV)).thenReturn(tvTrends);
 
         GraphQlTester.Response response = tester.document(trending)
                 .execute();
@@ -210,12 +222,12 @@ public class TrendingControllerTest {
                     assertThat(errors).isNotEmpty();
                     assertThat(errors.getFirst().getErrorType().toString()).isEqualTo("NOT_FOUND");
                 });
-        List<VideoContent.BasicInfo> animeTrendsResult = response.path("trendVideoContent.animeTrends")
+        List<VideoContent.BasicInfo> animeTrendsResult = response.path("anime_trends.trends")
                 .entityList(VideoContent.BasicInfo.class)
                 .get();
-        response.path("trendVideoContent.movieTrends")
+        response.path("movie_trends")
                 .valueIsNull();
-        List<VideoContent.BasicInfo> tvTrendsResult = response.path("trendVideoContent.tvTrends")
+        List<VideoContent.BasicInfo> tvTrendsResult = response.path("tv_trends.trends")
                 .entityList(VideoContent.BasicInfo.class)
                 .get();
         assertIterableEquals(animeTrends, animeTrendsResult);
@@ -223,10 +235,10 @@ public class TrendingControllerTest {
     }
 
     @Test
-    public void tvTrendsNotFound() throws ContentNotFoundException {
-        when(videoContentService.getAnimeTrends()).thenReturn(animeTrends);
-        when(videoContentService.getMovieTrends()).thenReturn(movieTrends);
-        when(videoContentService.getTvTrends()).thenThrow(new ContentNotFoundException());
+    public void tvTrendsNotFound() throws ContentNotFoundException, TooManyAnimeRequestsException {
+        when(animeService.getAnimeTrends(any())).thenReturn(animeTrends);
+        when(mainstreamService.getTrends(VideoContentFormat.MOVIE)).thenReturn(movieTrends);
+        when(mainstreamService.getTrends(VideoContentFormat.TV)).thenThrow(new ContentNotFoundException());
 
         GraphQlTester.Response response = tester.document(trending)
                 .execute();
@@ -235,13 +247,13 @@ public class TrendingControllerTest {
                     assertThat(errors).isNotEmpty();
                     assertThat(errors.getFirst().getErrorType().toString()).isEqualTo("NOT_FOUND");
                 });
-        List<VideoContent.BasicInfo> animeTrendsResult = response.path("trendVideoContent.animeTrends")
+        List<VideoContent.BasicInfo> animeTrendsResult = response.path("anime_trends.trends")
                 .entityList(VideoContent.BasicInfo.class)
                 .get();
-        List<VideoContent.BasicInfo> movieTrendsResult = response.path("trendVideoContent.movieTrends")
+        List<VideoContent.BasicInfo> movieTrendsResult = response.path("movie_trends.trends")
                 .entityList(VideoContent.BasicInfo.class)
                 .get();
-        response.path("trendVideoContent.tvTrends")
+        response.path("tv_trends")
                 .valueIsNull();
         assertIterableEquals(animeTrends, animeTrendsResult);
         assertIterableEquals(movieTrends, movieTrendsResult);

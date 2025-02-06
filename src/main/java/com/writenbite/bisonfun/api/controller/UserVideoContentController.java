@@ -1,7 +1,7 @@
 package com.writenbite.bisonfun.api.controller;
 
 import com.writenbite.bisonfun.api.client.ContentNotFoundException;
-import com.writenbite.bisonfun.api.client.anilist.TooManyAnimeRequestsException;
+import com.writenbite.bisonfun.api.service.external.TooManyAnimeRequestsException;
 import com.writenbite.bisonfun.api.database.entity.User;
 import com.writenbite.bisonfun.api.security.UserNotFoundException;
 import com.writenbite.bisonfun.api.security.UserPrincipal;

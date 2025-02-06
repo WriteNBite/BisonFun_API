@@ -7,6 +7,8 @@ import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMedia;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaFormat;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaPage;
 import com.writenbite.bisonfun.api.client.anilist.types.AniListPage;
+import com.writenbite.bisonfun.api.client.anilist.types.media.AniListTrends;
+import com.writenbite.bisonfun.api.service.external.TooManyAnimeRequestsException;
 import kong.unirest.core.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,20 +45,21 @@ public class AniListClient {
     }
     //parse anime trends
     @Cacheable("animeTrends")
-    public AniListPage<AniListMedia> parseAnimeTrends() throws TooManyAnimeRequestsException {
-        log.debug("Parsing Anime Trends");
+    public AniListTrends parseAnimeTrendsList() throws TooManyAnimeRequestsException {
+        log.debug("Parsing Anime Trends List");
         JSONObject root;
         try {
-            root = aniListApiResponse.getAnimeTrends();
+            root = aniListApiResponse.getAnimeTrendsList();
         } catch (NoAccessException e) {
             log.error(e.getMessage());
             return null;
         }
-        AniListMediaPage mediaPage = gson.fromJson(String.valueOf(root), AniListMediaPage.class);
+        AniListTrends aniListTrends = gson.fromJson(String.valueOf(root), AniListTrends.class);
 
-        log.debug("Media Page: {}", mediaPage);
-        return mediaPage;
+        log.debug("AniListTrends: {}", aniListTrends);
+        return aniListTrends;
     }
+
     //parse anime(as VideoEntertainment)
     @Cacheable("jsonAnime")
     public AniListMedia parseAnimeById(Integer aniListId) throws ContentNotFoundException, TooManyAnimeRequestsException {

@@ -16,13 +16,13 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.graphql.GraphQlTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.graphql.test.tester.GraphQlTester;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,17 +31,17 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @GraphQlTest(AuthController.class)
-@Import({GraphQlConfig.class, MapperConfig.class})
+@Import({GraphQlConfig.class, MapperConfig.class, JwtService.class})
 public class AuthControllerTest {
     @Autowired
     private GraphQlTester tester;
     @Autowired
     private UserMapper userMapper;
-    @SpyBean
+    @MockitoSpyBean
     private JwtService jwtService;
-    @MockBean
+    @MockitoBean
     private UserService userService;
-    @MockBean
+    @MockitoBean
     private AuthenticationManager authenticationManager;
     private User user;
 
@@ -70,8 +70,8 @@ public class AuthControllerTest {
                 .hasValue()
                 .entity(String.class)
                 .get();
-        assertEquals(jwtService.getHolder(accessToken).extractTokenType(), TokenType.ACCESS);
-        assertEquals(jwtService.getHolder(refreshToken).extractTokenType(), TokenType.REFRESH);
+        assertEquals(TokenType.ACCESS, jwtService.getHolder(accessToken).extractTokenType());
+        assertEquals(TokenType.REFRESH, jwtService.getHolder(refreshToken).extractTokenType());
     }
 
     @Test

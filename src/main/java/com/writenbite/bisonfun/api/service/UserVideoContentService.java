@@ -2,17 +2,17 @@ package com.writenbite.bisonfun.api.service;
 
 import com.writenbite.bisonfun.api.client.*;
 import com.writenbite.bisonfun.api.client.anilist.AniListClient;
-import com.writenbite.bisonfun.api.client.anilist.TooManyAnimeRequestsException;
 import com.writenbite.bisonfun.api.client.anilist.types.media.AniListMediaStatus;
 import com.writenbite.bisonfun.api.client.tmdb.TmdbClient;
 import com.writenbite.bisonfun.api.database.entity.*;
 import com.writenbite.bisonfun.api.database.mapper.VideoContentCategoryMapper;
+import com.writenbite.bisonfun.api.database.mapper.VideoContentMapper;
 import com.writenbite.bisonfun.api.database.repository.UserVideoContentPageableRepository;
 import com.writenbite.bisonfun.api.database.repository.UserVideoContentRepository;
+import com.writenbite.bisonfun.api.service.external.TooManyAnimeRequestsException;
 import com.writenbite.bisonfun.api.types.*;
 import com.writenbite.bisonfun.api.types.mapper.UserVideoContentListElementMapper;
 import com.writenbite.bisonfun.api.types.mapper.UserVideoContentListStatusMapper;
-import com.writenbite.bisonfun.api.types.mapper.VideoContentBasicInfoMapper;
 import com.writenbite.bisonfun.api.types.mapper.VideoContentFormatMapper;
 import com.writenbite.bisonfun.api.types.uservideocontent.input.UpdateUserVideoContentListElementInput;
 import com.writenbite.bisonfun.api.types.videocontent.input.VideoContentIdInput;
@@ -46,7 +46,7 @@ public class UserVideoContentService {
     private final VideoContentCategoryMapper categoryMapper;
     private final VideoContentFormatMapper formatMapper;
     private final UserVideoContentListElementMapper userVideoContentListElementMapper;
-    private final VideoContentBasicInfoMapper videoContentBasicInfoMapper;
+    private final VideoContentMapper videoContentDbMapper;
     private final VideoContentService videoContentService;
 
     private Optional<VideoContentModel> getVideoContentModel(VideoContent videoContent) throws TooManyAnimeRequestsException {
@@ -60,14 +60,14 @@ public class UserVideoContentService {
             return switch (videoContent.getType()) {
                 case TV, MUSIC, SPECIAL -> {
                     try {
-                        yield Optional.of(new TmdbTvSeriesVideoContentModel(tmdbClient.parseShowById(videoContent.getTmdbId())));
+                        yield Optional.of(tmdbClient.parseShowById(videoContent.getTmdbId()));
                     } catch (ContentNotFoundException e) {
                         yield Optional.empty();
                     }
                 }
                 case MOVIE -> {
                     try {
-                        yield Optional.of(new TmdbMovieVideoContentModel(tmdbClient.parseMovieById(videoContent.getTmdbId())));
+                        yield Optional.of(tmdbClient.parseMovieById(videoContent.getTmdbId()));
                     } catch (ContentNotFoundException e) {
                         yield Optional.empty();
                     }
@@ -139,7 +139,7 @@ public class UserVideoContentService {
 
         Pageable pageable = PageRequest.of(page - 1, 20, Sort.by("statusStage"));
         Page<UserVideoContent> result = userVideoContentPageableRepository.findUserVideoContent(userId, input.episode(), queryScore, statuses.isEmpty() ? null : statuses, categories.isEmpty() ? null : categories, types.isEmpty() ? null : types, input.yearFrom(), input.yearTo(), pageable);
-        PageInfo pageInfo = new PageInfo((int) result.getTotalElements(), result.getNumberOfElements(), result.getNumber() + 1, result.getTotalPages(), result.hasNext());
+        PageInfo pageInfo = new PageInfo.PageInfoBuilder().increaseTotal((int) result.getTotalElements()).setPerPage(result.getNumberOfElements()).setCurrentPageIfLess(result.getNumber() + 1).setLastPageIfGreater(result.getTotalPages()).setHasNextPage(result.hasNext()).createPageInfo();
         List<UserVideoContentListElement> userVideoContentListElements = userVideoContentListElementMapper.fromEntities(result.getContent());
         return new UserVideoContentListConnection(userVideoContentListElements, pageInfo);
     }
@@ -154,7 +154,7 @@ public class UserVideoContentService {
         int size = userVideoContentPageableRepository.countUserVideoContent(userId, input.episode(), queryScore, statuses.isEmpty() ? null : statuses, categories.isEmpty() ? null : categories, types.isEmpty() ? null : types, input.yearFrom(), input.yearTo());
         Pageable pageable = PageRequest.of(new Random().nextInt(size), 1);
         Slice<UserVideoContent> result = userVideoContentPageableRepository.findUserVideoContentSlice(userId, input.episode(), queryScore, statuses.isEmpty() ? null : statuses, categories.isEmpty() ? null : categories, types.isEmpty() ? null : types, input.yearFrom(), input.yearTo(), pageable);
-        return videoContentBasicInfoMapper.fromVideoContentDb(result.getContent().getFirst().getVideoContent());
+        return videoContentDbMapper.toBasicInfo(result.getContent().getFirst().getVideoContent());
     }
 
     public UserVideoContentListElement userVideoContentListElement(int userId, long videoContentId) throws ContentNotFoundException {
@@ -245,12 +245,12 @@ public class UserVideoContentService {
         if (input.aniListId() != null) {
             optionalUserVideoContent = optionalUserVideoContent.isEmpty() ? userVideoContentRepository.findById_UserIdAndVideoContent_AniListId(userId, input.aniListId()) : optionalUserVideoContent;
         }
-        if (input.tmdbIdInput() != null) {
+        if (input.tmdbVideoContentIdInput() != null) {
             optionalUserVideoContent = optionalUserVideoContent.isEmpty() ?
                     userVideoContentRepository.findById_UserIdAndVideoContent_TmdbIdAndVideoContent_Type(
                             userId,
-                            input.tmdbIdInput().tmdbId(),
-                            formatMapper.toVideoContentType(input.tmdbIdInput().format())
+                            input.tmdbVideoContentIdInput().tmdbId(),
+                            formatMapper.toVideoContentType(input.tmdbVideoContentIdInput().format())
                     )
                     : optionalUserVideoContent;
         }
