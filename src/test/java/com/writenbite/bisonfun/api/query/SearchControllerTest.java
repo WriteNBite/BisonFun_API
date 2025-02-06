@@ -18,11 +18,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.graphql.GraphQlTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.graphql.test.tester.GraphQlTester;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,13 +43,13 @@ public class SearchControllerTest {
     @Autowired
     private GraphQlTester tester;
 
-    @MockBean
+    @MockitoBean
     private VideoContentService videoContentService;
-    @MockBean
+    @MockitoBean
     private VideoContentSearchService videoContentSearchService;
-    @MockBean
+    @MockitoBean
     private AnimeService<AniListMedia, com.writenbite.bisonfun.api.database.entity.VideoContent> animeService;
-    @MockBean
+    @MockitoBean
     private MainstreamService<TmdbVideoContent, com.writenbite.bisonfun.api.database.entity.VideoContent, AniListMedia> mainstreamService;
 
     private String mainstreamSearch;
